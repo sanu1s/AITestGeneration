@@ -12,9 +12,9 @@ import dev.langchain4j.service.AiServices;
 import java.net.URI;
 
 public class JiraQaStatusChecker {
-    private static final String JIRA_URL = "https://techsavy.atlassian.net";
-    private static final String JIRA_USER = "arjunkrishnansuresh@gmail.com";
-    private static final String JIRA_TOKEN = "ATATT3xFfGF0DcLCkEfxGEQsx8KeKpGqpNU5sX1BisXKKxqGP1zazYCWxazDf6Ts4-X_O_XhXSOg9kOYP9Yx3lnjKXDeuZlBd4o1sCmgEsaY3ZUmsbESIQdaUxesG3mHgU83eS-fcrKELyNi3-Ty_GgHL37CgdhKr0FZQf1OcJbIo50zeP0pzWA=6577795D";
+    private static final String JIRA_URL = "https://domain.atlassian.net";
+    private static final String JIRA_USER = "test@a.com";
+    private static final String JIRA_TOKEN = "Key";
 
     public static void main(String[] args) throws Exception {
         // 1. Connect to Jira
@@ -47,15 +47,9 @@ public class JiraQaStatusChecker {
     }
 
     private static void analyzeWithGemini(String text) throws Exception {
-      /*  ChatModel model1 = GoogleAiGeminiChatModel.builder()
-                .apiKey("AIzaSyBOMsOh3vQwVaG8sn73psLAgLDpqDUF3uQ")
-                .modelName("gemini-2.5-flash") // Use latest models like 2.5 Flash
-                .temperature(0.7)
-                .build();
-        TranscriptPipelineUsingBDD.UseCaseAssistant assistant = AiServices.create(TranscriptPipelineUsingBDD.UseCaseAssistant.class, model1);
-       */
+    
 
-        try (VertexAI vertexAi = new VertexAI("gen-lang-client-0797152215", "us-central1")) {
+        try (VertexAI vertexAi = new VertexAI("test", "us-central1")) {
             GenerativeModel model = new GenerativeModel("gemini-2.5-flash", vertexAi);
 
             String prompt = "Act as a QA Engineer. Review these requirements for testability and edge cases:\n\n" + text;
