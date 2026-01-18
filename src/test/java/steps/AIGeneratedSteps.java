@@ -40,10 +40,10 @@ public void userIsOnOrderTrackingPage() {
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@Then("The status message should contain {string}")
-public void theStatusMessageShouldContain(String expectedText) {
-    System.out.println("Executing: The status message should contain \"" + expectedText + "\"");
-    assertThat(page.locator(".result")).containsText(expectedText);
+@Then("The delivery date should be displayed")
+public void theDeliveryDateShouldBeDisplayed() {
+    System.out.println("Executing: The delivery date should be displayed");
+    assertThat(page.locator(".result")).containsText("Delivery Date");
 }
 
 @When("User enters order number {string}")
@@ -52,9 +52,9 @@ public void userEntersOrderNumber(String orderNo) {
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The tracking result should display {string}")
-public void theTrackingResultShouldDisplay(String expectedText) {
-    System.out.println("Executing: The tracking result should display " + expectedText);
+@Then("The result should display {string}")
+public void theResultShouldDisplay(String expectedText) {
+    System.out.println("Executing: The result should display " + expectedText);
     assertThat(page.locator(".result")).containsText(expectedText);
 }
 
