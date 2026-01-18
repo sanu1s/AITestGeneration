@@ -42,12 +42,9 @@ public class TranscriptPipeline {
 
 
         // 4. Initialize LangChain4j Model and Service fro open AI
-        /*OpenAiChatModel model = OpenAiChatModel.builder()
-                .apiKey("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")
-                .modelName("gpt-4o") // Current 2026 standard
-                .build();*/
+       
         ChatModel model = GoogleAiGeminiChatModel.builder()
-                .apiKey("AIzaSyDTlGgsrgAanBCBtYLEBBoCfC3KPeFxyM8")
+                .apiKey("key")
                 .modelName("gemini-2.5-flash") // Use latest models like 2.5 Flash
                 .temperature(0.7)
                 .build();
