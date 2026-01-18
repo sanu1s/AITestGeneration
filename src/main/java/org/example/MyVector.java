@@ -34,11 +34,11 @@ public class MyVector {
         // 1. Initialize Client (Default gRPC port is 6334)
         QdrantClient client = new QdrantClient(
                 QdrantGrpcClient.newBuilder(
-                                "4f9ed8ad-0ecc-4f51-b828-4774a7881c6d.europe-west3-0.gcp.cloud.qdrant.io",
+                                "domain",
                                 6334,
                                 true
                         )
-                        .withApiKey("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.51CpjOg-Fn33qtC1xjdPu_BhfWd9nwnDEehyEeCuz_k")
+                        .withApiKey("key")
                         .build()
         );
         // 2. Create a Collection (if it doesn't exist) with dimensions
