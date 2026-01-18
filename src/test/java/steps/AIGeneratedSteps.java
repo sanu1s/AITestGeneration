@@ -40,6 +40,18 @@ public void userIsOnTheOrderTrackingPage() {
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
+@Then(""Delivery Date" should be displayed")
+public void deliveryDateShouldBeDisplayed() {
+    System.out.println("Executing: "Delivery Date" should be displayed");
+    assertThat(page.locator(".result")).containsText("Delivery Date");
+}
+
+@Then("the order status should be {string}")
+public void theOrderStatusShouldBe(String expectedStatus) {
+    System.out.println("Executing: The order status should be " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
+}
+
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
     System.out.println("Executing: User enters order number " + orderNo);
