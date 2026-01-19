@@ -1,8 +1,7 @@
 Feature: Order Tracking
 
-  Scenario: Successfully track a delayed order with delivery date
-    Given I am on the order tracking page
-    When I enter order number "ORD12345"
-    And I click the "Track Order" button
-    Then I should see the order status "Delayed"
-    And I should see "Delivery Date"
+  Scenario: Display error for incorrect length order number
+    Given User is on the Order Tracking page
+    When User enters order number "ORD123"
+    And User clicks the "Track Order" button
+    Then The error message should display "Order number length is incorrect."
