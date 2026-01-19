@@ -1,8 +1,8 @@
 Feature: Order Tracking Functionality
 
-  Scenario: Track Specific Order ORD12345 with Delayed Status
-    Given User is on the order tracking page
-    When User enters order number "ORD12345"
-    And User clicks the "Track Order" button
-    Then Order status should be "Delayed"
-    And Delivery date should be displayed
+  Scenario: Tracking a specific delayed order ORD12345
+    Given I am on the order tracking page
+    When I enter order number "ORD12345"
+    And I click the "Track Order" button
+    Then I should see the status "Delayed"
+    And I should also see "Delivery Date"
