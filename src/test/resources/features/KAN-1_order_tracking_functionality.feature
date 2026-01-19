@@ -5,4 +5,4 @@ Feature: Order Tracking Functionality
     When User enters order number "ORD12345"
     And User clicks the "Track Order" button
     Then The order status should be "Delayed"
-    And The result should show "Delivery Date"
+    And The page should display "Delivery Date"
