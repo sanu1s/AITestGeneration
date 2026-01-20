@@ -106,7 +106,7 @@ dependencies {
 
     // Allure
     testImplementation("io.qameta.allure:allure-cucumber7-jvm:2.25.0")
-    testImplementation("io.qameta.allure:allure-junit-platform:2.25.0")
+    // testImplementation("io.qameta.allure:allure-junit-platform:2.25.0") // Removed to avoid Runner class appearing in reports
 }
 
 allure {

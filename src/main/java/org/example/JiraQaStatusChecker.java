@@ -17,6 +17,11 @@ public class JiraQaStatusChecker {
     private static final String JIRA_TOKEN = "Key";
 
     public static void main(String[] args) throws Exception {
+        String JIRA_TOKEN = System.getenv("JIRA_TOKEN");
+        if (JIRA_TOKEN == null || JIRA_TOKEN.trim().isEmpty()) {
+            throw new IllegalArgumentException("JIRA_TOKEN environment variable is not set. Please set it before running the application.");
+        }
+
         // 1. Connect to Jira
         JiraRestClient jiraClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN);
