@@ -1,7 +1,7 @@
 Feature: Order Tracking
 
-  Scenario: Attempt to track with an invalid format order number
+  Scenario: Attempt to track a non-existent order number
     Given User is on the order tracking page
-    When User enters order number "123"
+    When User enters order number "NONEXIST"
     And User clicks the "Track Order" button
-    Then The error message should display "Invalid order number format."
+    Then The result message should display "Order not found"
