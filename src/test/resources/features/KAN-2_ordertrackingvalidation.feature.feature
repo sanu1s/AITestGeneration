@@ -1,7 +1,7 @@
 Feature: OrderTrackingValidation.feature
 
-  Scenario: Attempt to track with a non-existent order number
+  Scenario: Display error for excessively long order number
     Given User is on the order tracking page
-    When User enters order number "NONEXIST"
+    When User enters order number "ORD123456789012345678901234567890"
     And User clicks the "Track Order" button
-    Then The error message should display "Order not found"
+    Then The error message should display "Order number too long."

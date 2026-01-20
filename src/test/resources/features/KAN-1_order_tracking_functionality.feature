@@ -1,7 +1,8 @@
 Feature: Order Tracking Functionality
 
-  Scenario: Display error for a non-existent order number
+  Scenario: Track a delayed order successfully
     Given User is on the order tracking page
-    When User enters order number "ORD99999"
+    When User enters order number "ORD12345"
     And User clicks the "Track Order" button
-    Then The error message should display "Order not found."
+    Then The order status should be "Delayed"
+    And The delivery date should be "2024-12-31"

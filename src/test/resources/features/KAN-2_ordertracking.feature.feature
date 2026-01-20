@@ -1,7 +1,8 @@
 Feature: OrderTracking.feature
 
-  Scenario: Display error for excessively long order number
+  Scenario: Handle order number with leading/trailing spaces
     Given User is on the order tracking page
-    When User enters order number "ORD123456789012345678901234567890"
+    When User enters order number "  ORD12345  "
     And User clicks the "Track Order" button
-    Then An error message "Order number is too long" should be displayed
+    Then The order status should be "Delayed"
+    And The delivery date should be "2024-12-31"
