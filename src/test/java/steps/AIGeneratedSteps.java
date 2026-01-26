@@ -27,17 +27,29 @@ public void userClicksTheButton(String buttonText) {
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
+@Then("The order status should be {string}")
+public void theOrderStatusShouldBe(String status) {
+    System.out.println("Verifying order status: " + status);
+    assertThat(page.locator(".result")).containsText("The order status " + status);
+}
+
+@When("User enters an empty order number")
+public void userEntersAnEmptyOrderNumber() {
+    System.out.println("Typing empty order number");
+    page.locator("#order_no").fill("");
+}
+
 @Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page.");
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://127.0.0.1:8000/order/tracking");
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@Then("The result message should contain {string}")
-public void theResultShouldContain(String expectedMessage) {
-    System.out.println("Verifying result message contains: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Then("The delivery date should be displayed")
+public void theDeliveryDateShouldBeDisplayed() {
+    System.out.println("Verifying delivery date is displayed");
+    assertThat(page.locator(".result")).containsText("Delivery Date");
 }
 
 @When("User enters order number {string}")
@@ -46,10 +58,10 @@ public void userEntersOrderNumber(String orderNo) {
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The URL should be {string}")
-public void theURLShouldBe(String expectedUrl) {
-    System.out.println("Verifying URL: " + expectedUrl);
-    assertThat(page).hasURL(expectedUrl);
+@Then("The result message should display {string}")
+public void theResultErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Verifying error message: " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 }
