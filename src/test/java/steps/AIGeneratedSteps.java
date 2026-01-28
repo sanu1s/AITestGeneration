@@ -21,35 +21,4 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("User is on the order tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page");
-    page.navigate("http://127.0.0.1:8000/order/tracking");
-    assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
-}
-
-@Then("The error message {string} should be displayed")
-public void theErrorMessageShouldBeDisplayed(String errorMessage) {
-    System.out.println("Verifying error message: " + errorMessage);
-    assertThat(page.locator(".result")).containsText(errorMessage);
-}
-
-@When("User clicks the 'Track Order' button")
-public void userClicksTheTrackOrderButton() {
-    System.out.println("Clicking 'Track Order' button");
-    page.locator("button:has-text('Track Order')").click();
-}
-
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
-    page.locator("#order_no").fill(orderNo);
-}
-
-@Then("The order status should be displayed as {string}")
-public void theOrderStatusShouldBeDisplayedAs(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
 }
