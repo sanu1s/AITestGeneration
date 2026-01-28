@@ -27,6 +27,12 @@ public void userClicksButton(String buttonText) {
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
+@Then("The order status should be {string}")
+public void theOrderStatusShouldBe(String expectedStatus) {
+    System.out.println("Executing: The order status should be " + expectedStatus);
+    assertThat(page.locator(".result")).containsText("The order status " + expectedStatus);
+}
+
 @Given("User is on the order tracking page")
 public void userIsOnOrderTrackingPage() {
     System.out.println("Executing: User is on the order tracking page");
@@ -40,22 +46,22 @@ public void userLeavesOrderNumberFieldEmpty() {
     page.locator("#order_no").fill("");
 }
 
+@Then("The delivery date should be displayed")
+public void theDeliveryDateShouldBeDisplayed() {
+    System.out.println("Executing: The delivery date should be displayed");
+    assertThat(page.locator(".result")).containsText("Delivery Date:");
+}
+
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
     System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The order status should display {string}")
-public void orderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Executing: The order status should display " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
-@Then("The result message should display {string}")
-public void resultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Executing: The result message should display " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Executing: The error message should display " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 }
