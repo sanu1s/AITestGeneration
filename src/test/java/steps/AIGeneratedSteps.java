@@ -23,51 +23,45 @@ public class AIGeneratedSteps {
 
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
+    System.out.println("Executing: User clicks the " + buttonText + " button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @Then("The order status should be {string}")
-public void theOrderStatusShouldBe(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText("The order status " + expectedStatus);
+public void theOrderStatusShouldBe(String status) {
+    System.out.println("Executing: The order status should be " + status);
+    assertThat(page.locator(".result")).containsText("The order status " + status);
 }
 
 @Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page");
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Executing: User is on the order tracking page");
     page.navigate("http://127.0.0.1:8000/order/tracking");
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
+@Then("The result should display a {string}")
+public void theResultShouldDisplayADeliveryDate(String expectedText) {
+    System.out.println("Executing: The result should display a " + expectedText);
+    assertThat(page.locator(".result")).containsText(expectedText);
+}
+
 @When("User leaves the order number field empty")
-public void userLeavesOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty");
+public void userLeavesTheOrderNumberFieldEmpty() {
+    System.out.println("Executing: User leaves the order number field empty");
     page.locator("#order_no").fill("");
 }
 
-@Then("The page should display the delivery date")
-public void thePageShouldDisplayTheDeliveryDate() {
-    System.out.println("Verifying delivery date is displayed");
-    // Assuming a delivery date format like 'Delivery Date: YYYY-MM-DD'
-    assertThat(page.locator(".result")).matches(java.util.regex.Pattern.compile(".*Delivery Date: \\d{4}
-
-@Then("An error message {string} should be displayed")
-public void anErrorMessageShouldBeDisplayed(String errorMessage) {
-    System.out.println("Verifying error message: " + errorMessage);
+@Then("The result should display error message {string}")
+public void theResultShouldDisplayErrorMessage(String errorMessage) {
+    System.out.println("Executing: The result should display error message " + errorMessage);
     assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
+    System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
-}
-
-@Then("The URL should be {string}")
-public void theURLShouldBe(String expectedUrl) {
-    System.out.println("Verifying URL: " + expectedUrl);
-    assertThat(page).hasURL(expectedUrl);
 }
 
 }
