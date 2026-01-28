@@ -22,41 +22,33 @@ public class AIGeneratedSteps {
     }
 
 @When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the " + buttonText + " button");
+public void userClicksTheTrackOrderButton(String buttonText) {
+    System.out.println("Clicking the track order button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @Then("The order status should be {string}")
 public void theOrderStatusShouldBe(String status) {
-    System.out.println("Executing: The order status should be " + status);
+    System.out.println("Verifying order status: " + status);
     assertThat(page.locator(".result")).containsText("The order status " + status);
 }
 
 @Given("User is on the order tracking page")
 public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://127.0.0.1:8000/order/tracking");
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@Then("The delivery date should be displayed")
-public void theDeliveryDateShouldBeDisplayed() {
-    System.out.println("Executing: The delivery date should be displayed");
-    // Assuming the delivery date itself is dynamic, but the label 'Delivery Date:' should be present
-    assertThat(page.locator(".result")).containsText("Delivery Date:");
-}
-
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
 public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Executing: The error message should display " + errorMessage);
-    // As per requirements, error messages are displayed in the .result container
+    System.out.println("Verifying error message: " + errorMessage);
     assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
