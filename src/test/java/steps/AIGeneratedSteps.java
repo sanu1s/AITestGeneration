@@ -23,8 +23,14 @@ public class AIGeneratedSteps {
 
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the \"" + buttonText + "\" button");
+    System.out.println("Executing: User clicks the " + buttonText + " button");
     page.locator("button:has-text('" + buttonText + "')").click();
+}
+
+@Then("The order status should be {string}")
+public void theOrderStatusShouldBe(String status) {
+    System.out.println("Executing: The order status should be " + status);
+    assertThat(page.locator(".result")).containsText("The order status " + status);
 }
 
 @Given("User is on the order tracking page")
@@ -34,21 +40,23 @@ public void userIsOnTheOrderTrackingPage() {
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number \"" + orderNo + "\"");
-    page.locator("#order_no").fill(orderNo);
+@Then("The delivery date should be displayed")
+public void theDeliveryDateShouldBeDisplayed() {
+    System.out.println("Executing: The delivery date should be displayed");
+    // Assuming the delivery date itself is dynamic, but the label 'Delivery Date:' should be present
+    assertThat(page.locator(".result")).containsText("Delivery Date:");
 }
 
-@Then("The order status should be displayed as {string}")
-public void theOrderStatusShouldBeDisplayedAs(String expectedStatus) {
-    System.out.println("Executing: The order status should be displayed as \"" + expectedStatus + "\"");
-    assertThat(page.locator(".result")).containsText("The order status " + expectedStatus);
+@When("User enters order number {string}")
+public void userEntersOrderNumber(String orderNo) {
+    System.out.println("Executing: User enters order number " + orderNo);
+    page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
 public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Executing: The error message should display \"" + errorMessage + "\"");
+    System.out.println("Executing: The error message should display " + errorMessage);
+    // As per requirements, error messages are displayed in the .result container
     assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
