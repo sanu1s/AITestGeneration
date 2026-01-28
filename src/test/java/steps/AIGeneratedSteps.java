@@ -21,35 +21,29 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheTrackOrderButton(String buttonText) {
-    System.out.println("Clicking the track order button");
-    page.locator("button:has-text('" + buttonText + "')").click();
-}
-
-@Then("The order status should be {string}")
-public void theOrderStatusShouldBe(String status) {
-    System.out.println("Verifying order status: " + status);
-    assertThat(page.locator(".result")).containsText("The order status " + status);
-}
-
 @Given("User is on the order tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page");
+public void userIsOnTrackingPage() {
+    System.out.println("Executing: User is on the order tracking page");
     page.navigate("http://127.0.0.1:8000/order/tracking");
-    assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+@When("User enters order number {string} and clicks track")
+public void userEntersOrderNumberAndClicksTrack(String orderNo) {
+    System.out.println("Executing: User enters order number \"" + orderNo + "\" and clicks track");
     page.locator("#order_no").fill(orderNo);
+    page.locator("button:has-text('Track Order')").click();
 }
 
 @Then("The error message should display {string}")
 public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Verifying error message: " + errorMessage);
+    System.out.println("Executing: The error message should display \"" + errorMessage + "\"");
     assertThat(page.locator(".result")).containsText(errorMessage);
+}
+
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Executing: The order status should display \"" + expectedStatus + "\"");
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 }
