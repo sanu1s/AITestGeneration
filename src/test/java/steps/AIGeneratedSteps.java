@@ -22,34 +22,35 @@ public class AIGeneratedSteps {
     }
 
 @When("User clicks the {string} button")
-public void userClicksButton(String buttonText) {
-    System.out.println("Executing: User clicks the \"" + buttonText + "\" button");
+public void userClicksTrackOrderButton(String buttonText) {
+    System.out.println("Clicking the '" + buttonText + "' button.");
     page.locator("button:has-text('" + buttonText + "')").click();
+}
+
+@Then("The order status should be {string} and display {string}")
+public void verifyOrderStatusAndDeliveryDate(String status, String deliveryDateText) {
+    System.out.println("Verifying order status: '" + status + "' and presence of '" + deliveryDateText + "'");
+    assertThat(page.locator(".result")).containsText("The order status " + status);
+    assertThat(page.locator(".result")).containsText(deliveryDateText);
 }
 
 @Given("User is on the order tracking page")
 public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
+    System.out.println("Navigating to order tracking page.");
     page.navigate("http://127.0.0.1:8000/order/tracking");
     assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
-@Then("An error message should be displayed as {string}")
-public void errorMessageShouldBeDisplayed(String errorMessage) {
-    System.out.println("Executing: An error message should be displayed as \"" + errorMessage + "\"");
-    assertThat(page.locator(".result")).containsText(errorMessage);
-}
-
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number \"" + orderNo + "\"");
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The order status should be displayed as {string}")
-public void orderStatusShouldBeDisplayed(String expectedStatus) {
-    System.out.println("Executing: The order status should be displayed as \"" + expectedStatus + "\"");
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Then("The error message should display {string}")
+public void verifyErrorMessage(String expectedErrorMessage) {
+    System.out.println("Verifying error message: '" + expectedErrorMessage + "'");
+    assertThat(page.locator(".result")).containsText(expectedErrorMessage);
 }
 
 }
