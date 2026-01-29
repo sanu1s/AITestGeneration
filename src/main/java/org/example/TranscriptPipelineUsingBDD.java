@@ -27,6 +27,12 @@ import java.io.File;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.regexp_replace;
+
+import io.javalin.Javalin;
+import io.javalin.http.staticfiles.Location;
+import java.util.concurrent.CompletableFuture;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -58,19 +64,46 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class TranscriptPipelineUsingBDD {
+
+    // Job Status Management
+    private static final Map<String, JobStatus> jobs = new ConcurrentHashMap<>();
+    
+    // Records for data exchange
+    record JobStatus(String status, String message, String prUrl, String reportUrl, String acceptanceCriteria, String jiraQuality) {}
+    record PipelineResult(String prUrl, String acceptanceCriteria, String jiraQuality) {}
+    record JiraFetchResult(List<PlaywrightTestCase> testCases, String requirements) {}
+    record JiraQualityResult(String score, String reasoning) {}
 
     private static final String JIRA_URL = "https://techsavy.atlassian.net";
     private static final String JIRA_USER = "arjunkrishnansuresh@gmail.com";
-    private static final String JIRA_TOKEN = System.getenv("JIRA_TOKEN");; // USER SHOULD REPLACE THIS
+    private static final String JIRA_TOKEN = System.getenv("JIRA_TOKEN");
 
     private static final String GITHUB_REPO_URL = "https://github.com/sanu1s/AITestGeneration.git";
-    private static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN"); // USER SHOULD REPLACE THIS
-    private static final String GITHUB_USER = System.getenv("GITHUB_USER"); // USER SHOULD REPLACE THIS 
+    private static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN");
+    private static final String GITHUB_USER = System.getenv("GITHUB_USER");
     
-
     // Define AI Service for Use Case generation
     interface UseCaseAssistant {
+        @SystemMessage("""
+                You are a QA Lead.
+                Your goal is to evaluate the quality of the provided JIRA requirements.
+                
+                Analyze the Summary and Description for:
+                1. Clarity (Is it ambiguous?)
+                2. Completeness (Are edge cases considered?)
+                3. Testability (Can it be automated?)
+                
+                Output JSON ONLY:
+                {
+                  "score": "85%",
+                  "reasoning": "Clear acceptance criteria but missing negative scenarios."
+                }
+                """)
+        JiraQualityResult checkQuality(String requirements);
+
         @SystemMessage("""
                 You are a Playwright Java Automation expert.
                 Your goal is to generate both a Gherkin Feature file and its corresponding Java Step Definitions.
@@ -118,37 +151,113 @@ public class TranscriptPipelineUsingBDD {
 
     @SuppressWarnings("null")
     public static void main(String[] args) throws Exception {
+        // Ensure report directory exists to prevent Javalin crash
+        File reportDir = new File("build/reports/allure-report/allureReport");
+        if (!reportDir.exists()) {
+            reportDir.mkdirs();
+        }
 
+        Javalin app = Javalin.create(config -> {
+            config.staticFiles.add("/static", Location.CLASSPATH);
+            config.staticFiles.add(staticFileConfig -> {
+                staticFileConfig.hostedPath = "/report";
+                staticFileConfig.directory = Paths.get("build/reports/allure-report/allureReport").toAbsolutePath().toString();
+                staticFileConfig.location = Location.EXTERNAL;
+            });
+        });
+
+        // Basic Authentication
+        app.before(ctx -> {
+            // Check for Basic Auth
+            var creds = ctx.basicAuthCredentials();
+            String expectedUser = System.getenv().getOrDefault("ADMIN_USER", "admin");
+            String expectedPass = System.getenv().getOrDefault("ADMIN_PASS", "admin123");
+
+            if (creds == null || !expectedUser.equals(creds.getUsername()) || !expectedPass.equals(creds.getPassword())) {
+                ctx.header("WWW-Authenticate", "Basic realm=\"VectorDB AntiGravity\"");
+                ctx.status(401).result("Unauthorized: Please log in.");
+            }
+        });
+
+        int port = 8088;
+        try {
+            port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8088"));
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid PORT env var, defaulting to 8088");
+        }
+        
+        app.start(port);
+
+        System.out.println("Server started at http://localhost:" + port);
+
+        app.post("/run", ctx -> {
+            String body = ctx.body();
+            System.out.println("DEBUG: Received body: '" + body + "'");
+            String epicKey = "";
+            if (body.contains("epicKey")) {
+                 // Simple manual JSON parse
+                 int startIndex = body.indexOf("epicKey") + 9; // "epicKey":
+                 epicKey = body.substring(startIndex).replaceAll("[^a-zA-Z0-9-]", "");
+            } else {
+                 // Fallback for raw string
+                 epicKey = body.trim();
+            }
+            
+            final String finalEpicKey = epicKey;
+            
+            System.out.println("Received request to run pipeline for: " + finalEpicKey);
+            
+            if (finalEpicKey.isEmpty()) {
+                ctx.status(400).result("Invalid Key");
+                return;
+            }
+
+            String jobId = UUID.randomUUID().toString();
+            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Starting pipeline...", null, null, null, null));
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    jobs.put(jobId, new JobStatus("IN_PROGRESS", "Executing pipeline...", null, null, null, null));
+                    PipelineResult result = executePipeline(finalEpicKey);
+                    jobs.put(jobId, new JobStatus("COMPLETED", "Pipeline finished successfully.", result.prUrl(), "/report/index.html", result.acceptanceCriteria(), result.jiraQuality()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null));
+                }
+            });
+
+            ctx.json(Map.of("jobId", jobId, "status", "IN_PROGRESS", "message", "Pipeline started"));
+        });
+
+        app.get("/status/{jobId}", ctx -> {
+            String jobId = ctx.pathParam("jobId");
+            JobStatus status = jobs.get(jobId);
+            if (status != null) {
+                ctx.json(status);
+            } else {
+                ctx.status(404).result("Job not found");
+            }
+        });
+    }
+
+    public static PipelineResult executePipeline(String issueKeyInput) throws Exception {
         boolean isTranscriptEnabled = false;
         // 0. Initialize HDFS Configuration
         Configuration conf = new Configuration();
         conf.set("fs.viewfs.impl", "org.apache.hadoop.fs.viewfs.ViewFileSystem");
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
 
-       
-        // 1. Initialize LangChain4j Model and Service fro open AI
-        /*
-         * OpenAiChatModel model = OpenAiChatModel.builder()
-         * .apiKey(
-         * "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")
-         * .modelName("gpt-4o") // Current 2026 standard
-         * .build();
-         */
-
-       String gitHubToken = System.getenv("GITHUB_TOKEN");
+        String gitHubToken = GITHUB_TOKEN;
         if (gitHubToken == null || gitHubToken.trim().isEmpty()) {
-            throw new IllegalArgumentException("GITHUB_TOKEN environment variable is not set. Please set it before running the application.");
+            System.out.println("WARNING: GITHUB_TOKEN is not valid. Git push might fail.");
         }
 
-        // String geminiApiKey = System.getenv("GEMINI_API_KEY");
-        String geminiApiKey = "AIzaSyA0WYeaMx5o4qIZd99spMpFi1Ztmezu0MM";
+        String geminiApiKey = System.getenv("GEMINI_API_KEY");
+        String githubUser = GITHUB_USER;
+
         if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
-            throw new IllegalArgumentException("GEMINI_API_KEY environment variable is not set. Please set it before running the application.");
-        }
-        
-        String githubUser = System.getenv("GITHUB_USER");
-        if (githubUser == null || githubUser.trim().isEmpty()) {
-            throw new IllegalArgumentException("GITHUB_USER environment variable is not set. Please set it before running the application.");
+             System.err.println("CRITICAL: GEMINI_API_KEY is missing!");
+             throw new IllegalArgumentException("GEMINI_API_KEY environment variable is not set.");
         }   
 
 
@@ -156,11 +265,14 @@ public class TranscriptPipelineUsingBDD {
                 .apiKey(geminiApiKey)
                 .modelName("gemini-2.5-flash") // Reverting to gemini-2.5-flash
                 .temperature(0.7)
+                .maxRetries(3)
+                .timeout(java.time.Duration.ofSeconds(60))
                 .build();
         UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
         System.out.println("Initialize LangChain4j Model and Service");
         // 2. Load the data from JIRA dashBoards and then run via LLM
         List<PlaywrightTestCase> allTestCases = new ArrayList<>();
+        String capturedRequirements = "";
         
         // Cleanup old features
         File featureDir = new File("src/test/resources/features");
@@ -179,7 +291,10 @@ public class TranscriptPipelineUsingBDD {
             }
         }
         
-        allTestCases.addAll(ReadDataFromJIRADashBoardDetails(assistant));
+        JiraFetchResult fetchResult = ReadDataFromJIRADashBoardDetails(assistant, issueKeyInput);
+        allTestCases.addAll(fetchResult.testCases());
+        capturedRequirements = fetchResult.requirements();
+
         if(isTranscriptEnabled){
         // 3. Clean Noisy Data using Spark SQL Regex
         // Removes filler words (um, uh, you know) and timestamps like [00:12:34]
@@ -208,9 +323,41 @@ public class TranscriptPipelineUsingBDD {
         // 7. Run the newly generated tests
         runGeneratedTests();
 
-        // 7. Push to GitHub
-        String branchName = "ai-generated-tests-" + UUID.randomUUID().toString().substring(0, 8);
-        pushToGitHub(branchName, "AI generated Cucumber test cases for Jira requirements");
+        // 8. Push to GitHub (Optional)
+        String prUrl = null;
+        if (gitHubToken != null && !gitHubToken.trim().isEmpty()) {
+            String branchName = "ai-generated-tests-" + UUID.randomUUID().toString().substring(0, 8);
+            prUrl = pushToGitHub(branchName, "AI generated Cucumber test cases for Jira requirements");
+        } else {
+            System.out.println("Skipping GitHub push (No Token)");
+        }
+        
+        // 9. Check Jira Quality
+        System.out.println("--- Starting Jira Quality Check ---");
+        String qualityHtml = "<div class='quality-score'>N/A</div>";
+        try {
+             if (capturedRequirements != null && !capturedRequirements.isEmpty()) {
+                 System.out.println("Requirements found, length: " + capturedRequirements.length());
+                 JiraQualityResult quality = assistant.checkQuality("Analyze these requirements:\n" + capturedRequirements);
+                 System.out.println("Quality analysis received: " + quality);
+                 
+                 qualityHtml = String.format(
+                     "<div style='text-align:center; padding:10px;'>" +
+                     "<div style='font-size:2rem; font-weight:bold; color:var(--accent-green);'>%s</div>" +
+                     "<div style='margin-top:5px; color:var(--text-secondary); font-size:0.9rem;'>%s</div>" +
+                     "</div>",
+                     quality.score(), quality.reasoning()
+                 );
+             } else {
+                 System.out.println("Captured requirements are empty or null.");
+             }
+        } catch (Exception e) {
+            System.err.println("Error checking quality: " + e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println("--- Finished Jira Quality Check ---");
+        
+        return new PipelineResult(prUrl, capturedRequirements, qualityHtml);
     }
 
     private static List<PlaywrightTestCase> feedDataCleanedUpDatatoLLM(Dataset<Row> cleanedTranscripts, UseCaseAssistant assistant) {
@@ -269,14 +416,14 @@ public class TranscriptPipelineUsingBDD {
             }
         }
     }
-     private static List<PlaywrightTestCase> ReadDataFromJIRADashBoardDetails(UseCaseAssistant assistant) throws Exception {
-        System.out.println("Reading data from JIRA dashBoard details");
-        // final String JQL_QUERY = "project = 'KAN' AND status = 'In Progress'";
-        final String JQL_QUERY = "project = 'KAN'";
+    private static JiraFetchResult ReadDataFromJIRADashBoardDetails(UseCaseAssistant assistant, String issueKeyInput) throws Exception {
+        System.out.println("Reading data from JIRA for key: " + issueKeyInput);
+        final String JQL_QUERY = "key = '" + issueKeyInput + "' OR parent = '" + issueKeyInput + "'";
 
         final int PAGE_SIZE = 50;
         int startAt = 0;
         List<PlaywrightTestCase> testCases = new ArrayList<>();
+        StringBuilder requirementsBuilder = new StringBuilder();
 
         try (JiraRestClient jiraClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN)) {
@@ -310,6 +457,10 @@ public class TranscriptPipelineUsingBDD {
 
                     String requirementsData = String.format("Summary: %s\nDescription: %s",
                             issue.getSummary(), issue.getDescription());
+                    
+                    requirementsBuilder.append("<h3>Issue: ").append(issueKey).append("</h3>");
+                    requirementsBuilder.append("<p><strong>Summary:</strong> ").append(issue.getSummary()).append("</p>");
+                    requirementsBuilder.append("<div class='desc'>").append(issue.getDescription() != null ? issue.getDescription() : "No description").append("</div><hr/>");
 
                     System.out.println("Reading requirements for Gemini analysis...");
                     insertIntoVectorDB(requirementsData);
@@ -323,7 +474,7 @@ public class TranscriptPipelineUsingBDD {
                 if (issueCount == 0) break;
             }
         }
-        return testCases;
+        return new JiraFetchResult(testCases, requirementsBuilder.toString());
     }
     @SuppressWarnings("null")
     private static void insertIntoVectorDB(String requirementsData) throws InterruptedException, ExecutionException {
@@ -402,8 +553,17 @@ public class TranscriptPipelineUsingBDD {
     }
 
     private static List<PlaywrightTestCase> analyzeWithGeminiAI(String requirementsData, UseCaseAssistant assistant, String issueKey) {
-         String prompt = "Act as a QA Engineer. Review these requirements for testability and edge cases and generate multiple test cases with scenarios and different feature files\n\n"
-                + requirementsData;
+         String prompt = "Act as a QA Engineer. Review these requirements for testability and edge cases and generate multiple test cases with scenarios and different feature files.\n\n"
+                 + "IMPORTANT CONTEXT FOR PLAYWRIGHT GENERATION:\n"
+                 + "The application is running at http://127.0.0.1:8000/order/tracking. \n"
+                 + "HTML Structure:\n"
+                 + "- Input field ID: '#order_no'\n"
+                 + "- Submit Button Text: 'Track Order'\n"
+                 + "- Result Container Class: '.result' (This container displays BOTH success messages and error messages).\n"
+                 + "- THERE IS NO '.error' CLASS. You MUST verify errors by checking the text content of the '.result' element.\n"
+                 + "- SPECIFIC REQUIREMENT: Verify that for valid orders, the output contains the text 'The order status Delayed'.\n\n"
+                 + "REQUIREMENTS:\n"
+                 + requirementsData;
         System.out.println("My prompt message is ===>" + prompt);
         List<PlaywrightTestCase> generatedTestCases = new ArrayList<>();
         try {
@@ -414,7 +574,7 @@ public class TranscriptPipelineUsingBDD {
                     // 2. Access specific fields directly
                     System.out.println("scenarioName:\n" + testCase.scenarioName);
                     System.out.println("gherkinSteps:\n" + testCase.gherkinSteps);
-    
+                    System.out.println("playwrightJavaCode:\n" + testCase.playwrightJavaCode);    
                     System.out.println("Going to write the feature file");
                     createFeatureFile(testCase, issueKey);
                 }
@@ -511,8 +671,14 @@ public class TranscriptPipelineUsingBDD {
 
     private static void createFeatureFile(PlaywrightTestCase testCase, String issueKey) {
         String filePath = "src/test/resources/features/";
-        String sanitizedName = testCase.featureName.replaceAll("\\s+", "_").toLowerCase();
-        String fileName = filePath + issueKey + "_" + sanitizedName + ".feature";
+        String sanitizedFeatureName = testCase.featureName.replaceAll("\\s+", "_").toLowerCase();
+        String sanitizedScenarioName = testCase.scenarioName.replaceAll("[^a-zA-Z0-9]", "_").toLowerCase();
+        // Limit scenario name length to avoid filesystem issues
+        if (sanitizedScenarioName.length() > 50) {
+            sanitizedScenarioName = sanitizedScenarioName.substring(0, 50);
+        }
+        
+        String fileName = filePath + issueKey + "_" + sanitizedFeatureName + "_" + sanitizedScenarioName + ".feature";
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
             // 1. Write Feature Header (0 indentation)
@@ -565,7 +731,24 @@ public class TranscriptPipelineUsingBDD {
         }
 
         StringBuilder consolidatedCode = new StringBuilder();
+        java.util.Set<String> usedMethodNames = new java.util.HashSet<>();
+        
         for (String methodBody : uniqueSteps.values()) {
+            // Check for duplicate method names and rename if necessary
+            Pattern methodNamePattern = Pattern.compile("public void\\s+([a-zA-Z0-9_]+)\\s*\\(");
+            Matcher nameMatcher = methodNamePattern.matcher(methodBody);
+            
+            if (nameMatcher.find()) {
+                String methodName = nameMatcher.group(1);
+                if (usedMethodNames.contains(methodName)) {
+                    // Method name collision! Rename it.
+                    String newMethodName = methodName + "_" + (usedMethodNames.size() + 1);
+                    methodBody = methodBody.replaceFirst("public void\\s+" + methodName, "public void " + newMethodName);
+                    usedMethodNames.add(newMethodName);
+                } else {
+                    usedMethodNames.add(methodName);
+                }
+            }
             consolidatedCode.append(methodBody).append("\n\n");
         }
 
@@ -598,7 +781,7 @@ public class TranscriptPipelineUsingBDD {
         }
     }
 
-    private static void pushToGitHub(String branchName, String commitMessage) {
+    private static String pushToGitHub(String branchName, String commitMessage) {
         System.out.println("\n--- Pushing to GitHub ---");
         try {
             File localPath = new File(".");
@@ -637,9 +820,9 @@ public class TranscriptPipelineUsingBDD {
             git.commit().setMessage(commitMessage).setAuthor("Antigravity AI", "ai@example.com").call();
 
             // Push (only if token is provided)
-            if (GITHUB_TOKEN.equals("YOUR_GITHUB_TOKEN") || GITHUB_TOKEN.isEmpty()) {
-                System.out.println("Push skipped: GITHUB_TOKEN is not set.");
-                return;
+            if (GITHUB_TOKEN == null || GITHUB_TOKEN.isEmpty() || GITHUB_TOKEN.equals("YOUR_GITHUB_TOKEN")) {
+                System.out.println("Push skipped: GITHUB_TOKEN is not set or invalid.");
+                return null;
             }
 
             System.out.println("Pushing to remote...");
@@ -651,10 +834,12 @@ public class TranscriptPipelineUsingBDD {
 
             System.out.println("Successfully pushed to branch: " + branchName);
             System.out.println("Review URL: " + GITHUB_REPO_URL.replace(".git", "/tree/" + branchName));
+            return GITHUB_REPO_URL.replace(".git", "/tree/" + branchName);
 
         } catch (Exception e) {
             System.err.println("Error during Git operations: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
     }
 
