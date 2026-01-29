@@ -23,45 +23,39 @@ public class AIGeneratedSteps {
 
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the \"" + buttonText + "\" button");
+    System.out.println("Clicking button: " + buttonText);
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @Then("The order status should be {string}")
 public void theOrderStatusShouldBe(String status) {
-    System.out.println("Executing: The order status should be \"" + status + "\"");
+    System.out.println("Verifying order status: " + status);
     assertThat(page.locator(".result")).containsText("The order status " + status);
-}
-
-@Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
-    page.navigate("http://127.0.0.1:8000/order/tracking");
-    assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
 @When("User leaves the order number field empty")
 public void userLeavesOrderNumberFieldEmpty() {
-    System.out.println("Executing: User leaves the order number field empty");
+    System.out.println("Ensuring order number field is empty.");
     page.locator("#order_no").fill("");
 }
 
-@Then("The delivery date should be displayed")
-public void theDeliveryDateShouldBeDisplayed() {
-    System.out.println("Executing: The delivery date should be displayed");
-    assertThat(page.locator(".result")).containsText("Delivery Date:");
-}
-
-@Then("An error message {string} should be displayed")
-public void anErrorMessageShouldBeDisplayed(String errorMessage) {
-    System.out.println("Executing: An error message \"" + errorMessage + "\" should be displayed");
-    assertThat(page.locator(".result")).containsText(errorMessage);
+@Given("User is on the Order Tracking page")
+public void userIsOnOrderTrackingPage() {
+    System.out.println("Navigating to Order Tracking page.");
+    page.navigate("http://127.0.0.1:8000/order/tracking");
+    assertThat(page).hasURL("http://127.0.0.1:8000/order/tracking");
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number \"" + orderNo + "\"");
+    System.out.println("Entering order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
+}
+
+@Then("The result should display {string}")
+public void theResultShouldDisplay(String expectedText) {
+    System.out.println("Verifying result message: " + expectedText);
+    assertThat(page.locator(".result")).containsText(expectedText);
 }
 
 }
