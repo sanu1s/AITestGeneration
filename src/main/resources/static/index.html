@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kordel AI - Agentic Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Using Font Awesome for Icons (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Mobile Menu Toggle -->
+    <button id="menu-toggle" class="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-cube"></i> Kordel AI
+        </div>
+        <ul class="nav-links">
+            <li class="active"><i class="fas fa-th-large"></i> Missions</li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="search-bar">
+                <input type="text" placeholder="Explore Agent Capabilities...">
+            </div>
+            <div class="user-profile">
+                <!-- Quality Badge moved to Right Panel -->
+                <i class="fas fa-user-circle fa-2x"></i>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Left Column -->
+            <div class="left-panel">
+
+                <!-- Agentic Discovery Graph -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Agentic Chatbot Discovery</span>
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <div class="discovery-graph">
+                        <div class="graph-placeholder" id="brainContainer">
+                            <img src="agentic_robot.png" alt="Orchestrator Brain" class="brain-img">
+                            <div class="brain-status-text">
+                                <h3 id="brainLabel">QE Agent At Work</h3>
+                                <p id="brainStatus">Happy To Help You!!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed / Control -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Test Case Generation</span>
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <div class="activity-feed-container">
+                        <div class="status-item">
+                            <img src="test_gen_icon.png" class="test-gen-icon" alt="Icon">
+                            <div style="flex: 1;">
+                                <strong>Test Case Generator Suite</strong><br>
+                            </div>
+                        </div>
+
+                        <div class="control-panel">
+                            <div class="input-group">
+                                <input type="text" id="epicKey" placeholder="Enter Jira Epic Key (e.g., KAN-1)"
+                                    value="KAN-1">
+                            </div>
+                            <button id="runBtn" class="btn-primary">Generate Test Cases</button>
+                        </div>
+
+                        <!-- Git Link (Hidden) -->
+                        <div id="gitLinkContainer" class="git-link-container">
+                            <a href="#" target="_blank" id="gitLinkBtn" class="git-link-btn">
+                                <i class="fab fa-github"></i> Review Pull Request
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execution Lab (Logs) -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Execution Lab</span>
+                        <i class="fas fa-terminal"></i>
+                    </div>
+                    <div id="consoleOutput" class="execution-lab">
+                        <div class="log-entry">Waiting for input...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-panel">
+
+                <!-- NEW: Jira Quality Analysis -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Jira Quality Analysis</span>
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div id="qualityBadge" class="quality-box">
+                        <span style="color:var(--text-secondary);"><i class="fas fa-hourglass-start"></i> Waiting for
+                            Analysis...</span>
+                    </div>
+                </div>
+
+                <!-- Jira Validation -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>JIRA Requirement Validation</span>
+                    </div>
+                    <!-- Pipeline Execution Status -->
+                    <div class="status-item">
+                        <span>Pipeline Execution</span>
+                        <span id="executionStatusText"
+                            style="margin-left:auto; margin-right:10px; font-size:0.8rem; color:var(--text-secondary);">Idle</span>
+                        <div id="executionStatusIndicator" class="status-indicator"></div>
+                    </div>
+
+                    <!-- Acceptance Criteria Section -->
+                    <div class="ac-section">
+                        <h4>Acceptance Criteria</h4>
+                        <div id="acceptanceCriteriaContainer" class="ac-content">
+                            Waiting for requirements...
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Report Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Allure Report Preview</span>
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <!-- Allure Report Widget -->
+                    <div class="card report-card" style="padding: 0;">
+                        <div class="report-header">
+                            <div class="report-title">
+                                <strong>Allure Report</strong> <span
+                                    style="color:var(--text-secondary); font-weight:normal;">/ <span
+                                        id="reportDate">--</span></span>
+                            </div>
+                            <div class="report-timer">
+                                <i class="far fa-clock"></i> <span id="reportDuration">--:--:--</span>
+                            </div>
+                        </div>
+
+                        <div class="report-body">
+                            <!-- Chart (Left) -->
+                            <div class="chart-wrapper">
+                                <div id="detailedDonut" class="detailed-donut"></div>
+                                <div class="chart-center-text">
+                                    <div id="centerPercent" class="center-percent">--%</div>
+                                    <div class="center-label">Passed</div>
+                                </div>
+                            </div>
+
+                            <!-- Legend (Right) -->
+                            <div class="detailed-legend">
+                                <div class="legend-row"><span class="dot dot-passed"></span> Passed <span
+                                        id="countPassed" class="count-val">0</span></div>
+                                <div class="legend-row"><span class="dot dot-broken"></span> Broken <span
+                                        id="countBroken" class="count-val">0</span></div>
+                                <div class="legend-row"><span class="dot dot-failed"></span> Failed <span
+                                        id="countFailed" class="count-val">0</span></div>
+                                <div class="legend-row"><span class="dot dot-skipped"></span> Skipped <span
+                                        id="countSkipped" class="count-val">0</span></div>
+                                <div class="legend-row"><span class="dot dot-unknown"></span> Unknown <span
+                                        id="countUnknown" class="count-val">0</span></div>
+                            </div>
+                        </div>
+
+                        <div class="report-footer">
+                            <a href="/report/index.html" target="_blank" id="reportLink" class="view-report-link">
+                                Open Full Report <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js?v=3"></script>
+</body>
+
+</html>

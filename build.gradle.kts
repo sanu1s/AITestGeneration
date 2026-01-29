@@ -14,6 +14,16 @@ application {
     mainClass.set("org.example.TranscriptPipelineUsingBDD")
 }
 
+tasks.named<JavaExec>("run") {
+    // Pass all environment variables to the application
+    environment(System.getenv())
+    
+    // Explicitly print for debugging (optional, but good for verification)
+    doFirst {
+        println("GITHUB_TOKEN set: " + (System.getenv("GITHUB_TOKEN") != null))
+    }
+}
+
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
@@ -46,6 +56,11 @@ dependencies {
     // Add core and specific model dependencies
     implementation("dev.langchain4j:langchain4j")
     implementation("dev.langchain4j:langchain4j-open-ai")
+    
+    // Web Server (Javalin)
+    implementation("io.javalin:javalin:6.3.0")
+    implementation("org.slf4j:slf4j-simple:2.0.16")
+
     implementation("org.apache.spark:spark-sql_2.13:4.1.1")
     {
         exclude(group = "org.glassfish.jersey")
@@ -106,7 +121,7 @@ dependencies {
 
     // Allure
     testImplementation("io.qameta.allure:allure-cucumber7-jvm:2.25.0")
-    // testImplementation("io.qameta.allure:allure-junit-platform:2.25.0") // Removed to avoid Runner class appearing in reports
+    testImplementation("io.qameta.allure:allure-junit-platform:2.25.0") // Removed to avoid Runner class appearing in reports
 }
 
 allure {
