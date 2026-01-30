@@ -21,13 +21,13 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the Track Order button")
-public void userClicksTrackOrderButton() {
-    System.out.println("Clicking Track Order button");
-    page.locator("button:has-text('Track Order')").click();
+@When("User clicks the {string} button")
+public void userClicksTheButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Given("User is on the Order Tracking page")
+@Given("User is on the order tracking page")
 public void userIsOnOrderTrackingPage() {
     System.out.println("Navigating to order tracking page");
     page.navigate("http://127.0.0.1:8088/order/tracking");
@@ -46,9 +46,9 @@ public void theOrderStatusShouldBeDisplayedAs(String expectedStatus) {
 }
 
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedError) {
-    System.out.println("Verifying error message: " + expectedError);
-    assertThat(page.locator(".result")).containsText(expectedError);
+public void theErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Verifying error message: " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 }
