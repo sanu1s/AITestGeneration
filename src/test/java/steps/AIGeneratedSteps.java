@@ -22,8 +22,8 @@ public class AIGeneratedSteps {
     }
 
 @When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the " + buttonText + " button");
+public void userClicksButton(String buttonText) {
+    System.out.println("Executing: User clicks the \"" + buttonText + "\" button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
@@ -36,13 +36,13 @@ public void userIsOnOrderTrackingPage() {
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
+    System.out.println("Executing: User enters order number \"" + orderNo + "\"");
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The result message should display {string}")
 public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Executing: The result message should display " + expectedMessage);
+    System.out.println("Executing: The result message should display \"" + expectedMessage + "\"");
     assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
