@@ -65,7 +65,7 @@ import java.nio.file.Files;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TranscriptPipelineUsingBDD {
+public class AgenticTestOrchestrator {
 
     // Job Status Management
     private static final Map<String, JobStatus> jobs = new ConcurrentHashMap<>();
@@ -112,6 +112,11 @@ public class TranscriptPipelineUsingBDD {
 
         // Basic Authentication
         app.before(ctx -> {
+            // Exclude /order/tracking from authentication
+            if (ctx.path().equals("/order/tracking")) {
+                return;
+            }
+
             // Check for Basic Auth
             var creds = ctx.basicAuthCredentials();
             String expectedUser = System.getenv().getOrDefault("ADMIN_USER", "admin");
@@ -138,7 +143,7 @@ public class TranscriptPipelineUsingBDD {
         // Add Route for Order Tracking (Mock UI) - KEEPING THIS FOR TESTS
         app.get("/order/tracking", ctx -> {
             ctx.contentType("text/html");
-            ctx.result(TranscriptPipelineUsingBDD.class.getResourceAsStream("/static/tracking.html"));
+            ctx.result(AgenticTestOrchestrator.class.getResourceAsStream("/static/tracking.html"));
         });
         //For Mock UI---END
 
@@ -208,7 +213,7 @@ public class TranscriptPipelineUsingBDD {
                      ctx.result(Files.readString(file.toPath()));
                 } else {
                      // Fallback to classpath for reading (e.g. if packed in jar, though editing won't persist to src)
-                     try (java.io.InputStream is = TranscriptPipelineUsingBDD.class.getResourceAsStream("/prompts/" + filename);
+                     try (java.io.InputStream is = AgenticTestOrchestrator.class.getResourceAsStream("/prompts/" + filename);
                           BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
                           String content = reader.lines().collect(Collectors.joining("\n"));
                           ctx.result(content);
@@ -882,7 +887,7 @@ public class TranscriptPipelineUsingBDD {
                 return Files.readString(path);
             }
             // Fallback: Try loading from classpath (Prod/Jar)
-            try (java.io.InputStream is = TranscriptPipelineUsingBDD.class.getResourceAsStream("/prompts/" + filename);
+            try (java.io.InputStream is = AgenticTestOrchestrator.class.getResourceAsStream("/prompts/" + filename);
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
                  return reader.lines().collect(Collectors.joining("\n"));
             }
