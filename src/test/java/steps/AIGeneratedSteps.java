@@ -21,34 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("button:has-text('" + buttonText + "')").click();
+@Then("I should see the error message {string}")
+public void verifyErrorMessage(String expectedError) {
+    System.out.println("Verifying error message: " + expectedError);
+    assertThat(page.locator(".result")).containsText(expectedError);
 }
 
-@Given("User is on the Order Tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Navigating to Order Tracking page");
-    page.navigate("http://127.0.0.1:8088/order/tracking");
-}
-
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
-    page.locator("#order_no").fill(orderNo);
-}
-
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
+@Then("I should see the order status {string}")
+public void verifyOrderStatus(String expectedStatus) {
     System.out.println("Verifying order status: " + expectedStatus);
     assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
-@Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Given("I am on the order tracking page")
+public void navigateToOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
+    page.navigate("http://127.0.0.1:8088/order/tracking");
+}
+
+@When("I click the {string} button")
+public void clickButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
+}
+
+@When("I enter order number {string}")
+public void enterOrderNumber(String orderNo) {
+    System.out.println("Entering order number: " + orderNo);
+    page.locator("#order_no").fill(orderNo);
 }
 
 }
