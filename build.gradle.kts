@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("java")
     application
@@ -15,12 +18,27 @@ application {
 }
 
 tasks.named<JavaExec>("run") {
-    // Pass all environment variables to the application
-    environment(System.getenv())
-    
-    // Explicitly print for debugging (optional, but good for verification)
+    // 1. Load system environment variables first
+    val env = HashMap<String, Any>(System.getenv())
+
+    // 2. Load from local.properties if it exists (overrides system env if needed, or fills gaps)
+    val localProperties = File(project.rootDir, "local.properties")
+    if (localProperties.exists()) {
+        val props = Properties()
+        FileInputStream(localProperties).use { stream ->
+            props.load(stream)
+        }
+        for (name in props.stringPropertyNames()) {
+            env[name] = props.getProperty(name)
+        }
+    }
+
+    environment(env)
+
+    // Explicitly print for debugging
     doFirst {
-        println("GITHUB_TOKEN set: " + (System.getenv("GITHUB_TOKEN") != null))
+        println("GITHUB_TOKEN set: " + (environment["GITHUB_TOKEN"] != null))
+        println("GEMINI_API_KEY set: " + (environment["GEMINI_API_KEY"] != null))
     }
 }
 

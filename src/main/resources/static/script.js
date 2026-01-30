@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const runBtn = document.getElementById('runBtn');
     const epicKeyInput = document.getElementById('epicKey');
+    const fetchBtn = document.getElementById('fetchBtn');
     const consoleOutput = document.getElementById('consoleOutput');
     const reportLink = document.getElementById('reportLink');
     // const statusText was removed
@@ -188,6 +189,133 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     }
 
+
+
+    async function pollStatus(jobId, isFetchOnly = false) {
+        const intervalId = setInterval(async () => {
+            try {
+                const response = await fetch(`/status/${jobId}`);
+                if (response.ok) {
+                    const statusData = await response.json();
+                    
+                    if (statusData.status === 'COMPLETED') {
+                        clearInterval(intervalId);
+                        
+                        log(statusData.message, 'success');
+                        
+                        executionStatusText.textContent = "Completed";
+                        executionStatusText.style.color = "#00ff9d";
+                        executionStatusIndicator.className = "status-indicator active";
+                        
+                        // Show Acceptance Criteria
+                        if (statusData.acceptanceCriteria) {
+                            const acContainer = document.getElementById('acceptanceCriteriaContainer');
+                            acContainer.innerHTML = statusData.acceptanceCriteria;
+                        }
+
+                        // Show Quality Badge
+                        if (statusData.jiraQuality) {
+                            document.getElementById('qualityBadge').innerHTML = statusData.jiraQuality;
+                        }
+                        
+                        if (isFetchOnly) {
+                             // Enable Generate Button
+                             runBtn.disabled = false;
+                             fetchBtn.disabled = false;
+                             fetchBtn.textContent = 'Pull Requirements';
+                             log("Requirements fetched. You can now generate test cases.");
+                             setThinkingState(false);
+                             return; // Validation stop here for fetch
+                        }
+
+                        // Show Report
+                        reportLink.style.display = 'inline-block';
+                        fetchReportStats();
+                        
+                        // Show Git Link
+                        if (statusData.prUrl) {
+                            const gitContainer = document.getElementById('gitLinkContainer');
+                            const gitBtn = document.getElementById('gitLinkBtn');
+                            gitBtn.href = statusData.prUrl;
+                            gitContainer.style.display = 'block';
+                            log(`Git Branch created: ${statusData.prUrl}`);
+                        }
+
+                        runBtn.disabled = false;
+                        runBtn.textContent = 'Generate Test Cases';
+                        fetchBtn.disabled = false;
+                        
+                        setThinkingState(false);
+
+                    } else if (statusData.status === 'FAILED') {
+                        clearInterval(intervalId);
+                        
+                        log(statusData.message, 'error');
+                        revertUIState();
+                        fetchBtn.disabled = false;
+                        fetchBtn.textContent = 'Pull Requirements';
+                    }
+                    // If IN_PROGRESS, do nothing (wait for next poll)
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 2000);
+    }
+    
+    // FETCH BUTTON Logic
+    fetchBtn.addEventListener('click', async () => {
+        const epicKey = epicKeyInput.value.trim();
+        if (!epicKey) {
+            log("Error: Please enter a valid Jira Epic Key.", 'error');
+            return;
+        }
+
+        // UI Reset
+        fetchBtn.disabled = true;
+        fetchBtn.textContent = 'Fetching...';
+        runBtn.disabled = true; // Disable generate while fetching
+        
+        log(`Fetching requirements for Epic: ${epicKey}...`);
+        
+        // Update execution status
+        executionStatusText.textContent = "Fetching";
+        executionStatusText.style.color = "#FFD700";
+        executionStatusIndicator.className = "status-indicator running";
+        
+        // Reset AC & Quality
+        document.getElementById('acceptanceCriteriaContainer').innerHTML = "Fetching requirements...";
+        document.getElementById('qualityBadge').innerHTML = '<span style="color:var(--text-secondary);"><i class="fas fa-hourglass-start"></i> Analyzing Quality...</span>';
+        
+        setThinkingState(true);
+
+        try {
+            const response = await fetch('/fetch-requirements', { // New Endpoint
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ epicKey: epicKey })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                log(`Fetch started. ID: ${data.jobId}`);
+                pollStatus(data.jobId, true); // true = Fetch Only
+            } else {
+                const error = await response.text();
+                log(`Failed to fetch requirements: ${error}`, 'error');
+                revertUIState();
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Pull Requirements';
+            }
+        } catch (e) {
+            log(`Network Error: ${e.message}`, 'error');
+            revertUIState();
+            fetchBtn.disabled = false;
+            fetchBtn.textContent = 'Pull Requirements';
+        }
+    });
+
+    // RUN BUTTON Logic (Generate)
     runBtn.addEventListener('click', async () => {
         const epicKey = epicKeyInput.value.trim();
         if (!epicKey) {
@@ -197,11 +325,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // UI Reset
         runBtn.disabled = true;
-        runBtn.textContent = 'Running...';
-        log(`Starting pipeline for Epic: ${epicKey}...`);
+        runBtn.textContent = 'Generating...';
+        fetchBtn.disabled = true; // Disable fetch while generating
         
-        // Update execution status (Right Panel)
-        executionStatusText.textContent = "In Progress";
+        log(`Starting test generation for Epic: ${epicKey}...`);
+        
+        // Update execution status
+        executionStatusText.textContent = "Generating";
         executionStatusText.style.color = "#FFD700";
         executionStatusIndicator.className = "status-indicator running";
         
@@ -212,19 +342,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('centerPercent').textContent = "--%";
         document.getElementById('detailedDonut').style.background = `conic-gradient(var(--bg-dark) 0% 100%)`;
         
-        // Reset AC
-        document.getElementById('acceptanceCriteriaContainer').innerHTML = "Waiting for requirements...";
-        
-        // Reset Quality Badge
-        document.getElementById('qualityBadge').innerHTML = '<span style="color:var(--text-secondary);"><i class="fas fa-hourglass-start"></i> Waiting for Analysis...</span>';
-        
         // Reset Legend
         ['Passed', 'Failed', 'Broken', 'Skipped', 'Unknown'].forEach(status => {
              const el = document.getElementById(`count${status}`);
              if (el) el.textContent = '0';
         });
 
-        // Start Thinking Animation
         setThinkingState(true);
 
         try {
@@ -236,16 +359,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const data = await response.json();
-                log(`Job started. ID: ${data.jobId}`);
-                pollStatus(data.jobId);
+                log(`Generation started. ID: ${data.jobId}`);
+                pollStatus(data.jobId, false); // false = Full Run
             } else {
                 const error = await response.text();
-                log(`Failed to start job: ${error}`, 'error');
+                log(`Failed to start generation: ${error}`, 'error');
                 revertUIState();
+                runBtn.disabled = false; // Re-enable if failed
+                fetchBtn.disabled = false;
             }
         } catch (e) {
             log(`Network Error: ${e.message}`, 'error');
             revertUIState();
+            runBtn.disabled = false;
+            fetchBtn.disabled = false;
         }
     });
 
@@ -263,6 +390,83 @@ document.addEventListener('DOMContentLoaded', () => {
             statusText.style.color = "var(--text-secondary)";
         }
     }
+
+    // Prompt Editor Logic
+    const promptSelect = document.getElementById('promptSelect');
+    const promptEditor = document.getElementById('promptEditor');
+    const savePromptBtn = document.getElementById('savePromptBtn');
+    const refreshPromptsBtn = document.getElementById('refreshPromptsBtn');
+
+    async function loadPromptList() {
+        try {
+            const response = await fetch('/prompts');
+            if (response.ok) {
+                const files = await response.json();
+                promptSelect.innerHTML = '<option value="" disabled selected>Select a prompt...</option>';
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file;
+                    option.textContent = file;
+                    promptSelect.appendChild(option);
+                });
+            }
+        } catch (e) {
+            log("Failed to load prompt list", 'error');
+        }
+    }
+
+    promptSelect.addEventListener('change', async () => {
+        const filename = promptSelect.value;
+        if (!filename) return;
+
+        try {
+            const response = await fetch(`/prompts/${filename}`);
+            if (response.ok) {
+                const content = await response.text();
+                promptEditor.value = content;
+                savePromptBtn.disabled = false;
+            } else {
+                log(`Failed to load prompt: ${filename}`, 'error');
+            }
+        } catch (e) {
+            log(`Error loading prompt: ${e.message}`, 'error');
+        }
+    });
+
+    savePromptBtn.addEventListener('click', async () => {
+        const filename = promptSelect.value;
+        const content = promptEditor.value;
+        if (!filename) return;
+
+        savePromptBtn.disabled = true;
+        savePromptBtn.textContent = 'Saving...';
+
+        try {
+            const response = await fetch(`/prompts/${filename}`, {
+                method: 'POST',
+                body: content
+            });
+
+            if (response.ok) {
+                log(`Prompt saved: ${filename}`, 'success');
+            } else {
+                const err = await response.text();
+                log(`Failed to save prompt: ${err}`, 'error');
+            }
+        } catch (e) {
+            log(`Error saving prompt: ${e.message}`, 'error');
+        } finally {
+            savePromptBtn.disabled = false;
+            savePromptBtn.textContent = 'Save Changes';
+        }
+    });
+
+    if (refreshPromptsBtn) {
+        refreshPromptsBtn.addEventListener('click', loadPromptList);
+    }
+    
+    // Initial Load
+    loadPromptList();
 
     function revertUIState() {
         const runBtn = document.getElementById('runBtn');

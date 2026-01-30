@@ -13,6 +13,8 @@ import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2Embedding
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
 import io.qdrant.client.VectorsFactory;
@@ -49,15 +51,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.qdrant.client.PointIdFactory.id;
 import static io.qdrant.client.ValueFactory.value;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.regexp_replace;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -87,66 +86,11 @@ public class TranscriptPipelineUsingBDD {
     
     // Define AI Service for Use Case generation
     interface UseCaseAssistant {
-        @SystemMessage("""
-                You are a QA Lead.
-                Your goal is to evaluate the quality of the provided JIRA requirements.
-                
-                Analyze the Summary and Description for:
-                1. Clarity (Is it ambiguous?)
-                2. Completeness (Are edge cases considered?)
-                3. Testability (Can it be automated?)
-                
-                Output JSON ONLY:
-                {
-                  "score": "85%",
-                  "reasoning": "Clear acceptance criteria but missing negative scenarios."
-                }
-                """)
-        JiraQualityResult checkQuality(String requirements);
+        @SystemMessage("{{prompt}}")
+        JiraQualityResult checkQuality(@V("prompt") String systemPrompt, @UserMessage String requirements);
 
-        @SystemMessage("""
-                You are a Playwright Java Automation expert.
-                Your goal is to generate both a Gherkin Feature file and its corresponding Java Step Definitions.
-                
-                --- GHERKIN RULES ---
-                - Generate valid Gherkin steps for the 'gherkinSteps' list.
-                - Use CONCRETE values in the feature steps.
-                - FOR POSITIVE SCENARIOS: Use order number "ORD12345" to expect status "Delayed" and "Delivery Date".
-                - FOR NEGATIVE/VALIDATION SCENARIOS: Use invalid inputs (e.g., non-numeric, wrong length) as specified in requirements and verify error messages.
-                
-                --- STEP DEFINITION RULES ---
-                - For each Gherkin step, generate ONLY the corresponding Java Step Definition method body for 'playwrightJavaCode'.
-                - CRITICAL: Do NOT generate 'public class ...', 'import ...', or any constructors.
-                - ONLY generate the @Given, @When, @Then methods.
-                - Use the 'page' object for all actions.
-                - NEVER extract text manually (e.g., page.textContent()). 
-                - ALWAYS use Locator assertions like: assertThat(page.locator(".result")).containsText("Expected");
-                - Use assertThat(page).hasURL("..."); to check the current URL.
-                - Add System.out.println("Executing: " + <StepName>); for transparency.
-                
-                CRITICAL LOCATORS:
-                - Order Number Input: page.locator("#order_no")
-                - Track Button: page.locator("button:has-text('Track Order')")
-                - Status Message Result: page.locator(".result")
-                - Error Message: page.locator(".error") or page.locator("#error-message") depending on context (guess sensible default if unsure).
-                
-                Example:
-                If step is 'When User enters order number "ORD12345"', generate ONLY:
-                @When("User enters order number {string}")
-                public void enterOrder(String orderNo) {
-                    System.out.println("Typing order number: " + orderNo);
-                    page.locator("#order_no").fill(orderNo);
-                }
-                
-                If step is 'Then The error message should display "Invalid Order"', generate:
-                @Then("The error message should display {string}")
-                public void verifyError(String msg) {
-                     assertThat(page.locator(".error")).containsText(msg);
-                }
-                
-                CRITICAL: Prefer generic steps (e.g., {string}) over hardcoded strings in annotations to avoid "AmbiguousStepDefinitionsException".
-                CRITICAL: Response MUST be a raw JSON object only. Do NOT use markdown code blocks (e.g., ```json ... ```) or any other wrapping.""")
-        TestCasesResponse generate(String transcript);
+        @SystemMessage("{{prompt}}")
+        TestCasesResponse generate(@V("prompt") String systemPrompt, @UserMessage String transcript);
     }
 
     @SuppressWarnings("null")
@@ -179,6 +123,7 @@ public class TranscriptPipelineUsingBDD {
             }
         });
 
+        // Update port to 8088 (standard for python/simple servers, used in tests)
         int port = 8088;
         try {
             port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8088"));
@@ -189,6 +134,13 @@ public class TranscriptPipelineUsingBDD {
         app.start(port);
 
         System.out.println("Server started at http://localhost:" + port);
+
+        // Add Route for Order Tracking (Mock UI) - KEEPING THIS FOR TESTS
+        app.get("/order/tracking", ctx -> {
+            ctx.contentType("text/html");
+            ctx.result(TranscriptPipelineUsingBDD.class.getResourceAsStream("/static/tracking.html"));
+        });
+        //For Mock UI---END
 
         app.post("/run", ctx -> {
             String body = ctx.body();
@@ -229,6 +181,72 @@ public class TranscriptPipelineUsingBDD {
             ctx.json(Map.of("jobId", jobId, "status", "IN_PROGRESS", "message", "Pipeline started"));
         });
 
+        // Prompt Engineering Endpoints
+        app.get("/prompts", ctx -> {
+             // List all .txt files in src/main/resources/prompts/
+             File promptsDir = new File("src/main/resources/prompts/");
+             if (!promptsDir.exists()) {
+                 promptsDir.mkdirs();
+             }
+             String[] files = promptsDir.list((dir, name) -> name.endsWith(".txt"));
+             if (files == null) files = new String[0];
+             ctx.json(files);
+        });
+
+        app.get("/prompts/{filename}", ctx -> {
+            String filename = ctx.pathParam("filename");
+            // Security check: prevent directory traversal
+            if (filename.contains("..") || filename.contains("/") || !filename.endsWith(".txt")) {
+                ctx.status(403).result("Invalid filename");
+                return;
+            }
+            
+            try {
+                // Try from local source first (dev mode)
+                File file = new File("src/main/resources/prompts/" + filename);
+                if (file.exists()) {
+                     ctx.result(Files.readString(file.toPath()));
+                } else {
+                     // Fallback to classpath for reading (e.g. if packed in jar, though editing won't persist to src)
+                     try (java.io.InputStream is = TranscriptPipelineUsingBDD.class.getResourceAsStream("/prompts/" + filename);
+                          BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                          String content = reader.lines().collect(Collectors.joining("\n"));
+                          ctx.result(content);
+                     } catch (Exception e) {
+                          ctx.status(404).result("Prompt not found");
+                     }
+                }
+            } catch (Exception e) {
+                ctx.status(500).result("Error reading prompt: " + e.getMessage());
+            }
+        });
+
+        app.post("/prompts/{filename}", ctx -> {
+            String filename = ctx.pathParam("filename");
+            // Security check
+            if (filename.contains("..") || filename.contains("/") || !filename.endsWith(".txt")) {
+                ctx.status(403).result("Invalid filename");
+                return;
+            }
+            
+            String newContent = ctx.body();
+            
+            try {
+                // Write to local source file
+                File file = new File("src/main/resources/prompts/" + filename);
+                // Ensure directory exists
+                file.getParentFile().mkdirs();
+                
+                FileWriter writer = new FileWriter(file);
+                writer.write(newContent);
+                writer.close();
+                
+                ctx.result("Prompt saved successfully");
+            } catch (Exception e) {
+                ctx.status(500).result("Error saving prompt: " + e.getMessage());
+            }
+        });
+
         app.get("/status/{jobId}", ctx -> {
             String jobId = ctx.pathParam("jobId");
             JobStatus status = jobs.get(jobId);
@@ -237,6 +255,77 @@ public class TranscriptPipelineUsingBDD {
             } else {
                 ctx.status(404).result("Job not found");
             }
+        });
+
+        // Split Action: Fetch Requirements Only
+        app.post("/fetch-requirements", ctx -> {
+            String body = ctx.body();
+            String epicKey = "";
+            if (body.contains("epicKey")) {
+                 int startIndex = body.indexOf("epicKey") + 9; 
+                 epicKey = body.substring(startIndex).replaceAll("[^a-zA-Z0-9-]", "");
+            } else {
+                 epicKey = body.trim();
+            }
+            
+            final String finalEpicKey = epicKey;
+            if (finalEpicKey.isEmpty()) {
+                ctx.status(400).result("Invalid Key");
+                return;
+            }
+
+            String jobId = UUID.randomUUID().toString();
+            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Fetching requirements...", null, null, null, null));
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // Create minimal Assistant just for Quality Check (Gemini setup duplicate but fine)
+                     String geminiApiKey = System.getenv("GEMINI_API_KEY");
+                     ChatModel model = GoogleAiGeminiChatModel.builder()
+                        .apiKey(geminiApiKey)
+                        .modelName("gemini-2.5-flash")
+                        .temperature(0.7)
+                        .maxRetries(3)
+                        .timeout(java.time.Duration.ofSeconds(60))
+                        .build();
+                    UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
+
+                    // Fetch ONLY (false)
+                    JiraFetchResult result = ReadDataFromJIRADashBoardDetails(assistant, finalEpicKey, false);
+                    String requirements = result.requirements();
+                    
+                    // Run Quality Check
+                    String qualityHtml = "<div class='quality-score'>N/A</div>";
+                    String jiraQualityPrompt = loadPrompt("jira_quality_system_prompt.txt");
+                    if (requirements != null && !requirements.isEmpty()) {
+                         // Strip HTML tags for AI prompt? Or keep them? 
+                         // The requirements string has <h3> etc. The AI might handle it, or we should strip. 
+                         // Let's pass as is, the original code passed 'requirementsData' which was plain text Summary/Desc.
+                         // Wait, 'ReadData...' returns HTML string for display. 
+                         // But for QA, we need the content.
+                         // Ah, 'ReadData...' constructs 'requirementsBuilder' with HTML.
+                         // In 'executePipeline', we used 'capturedRequirements' (HTML) to pass to 'checkQuality'. 
+                         // "Analyze these requirements:\n" + capturedRequirements
+                         // So passing HTML is fine.
+                         JiraQualityResult quality = assistant.checkQuality(jiraQualityPrompt, "Analyze these requirements:\n" + requirements);
+                         qualityHtml = String.format(
+                             "<div style='text-align:center; padding:10px;'>" +
+                             "<div style='font-size:2rem; font-weight:bold; color:var(--accent-green);'>%s</div>" +
+                             "<div style='margin-top:5px; color:var(--text-secondary); font-size:0.9rem;'>%s</div>" +
+                             "</div>",
+                             quality.score(), quality.reasoning()
+                         );
+                    }
+                    
+                    jobs.put(jobId, new JobStatus("COMPLETED", "Requirements fetched.", null, null, requirements, qualityHtml));
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null));
+                }
+            });
+            
+            ctx.json(Map.of("jobId", jobId, "status", "IN_PROGRESS", "message", "Fetching started"));
         });
     }
 
@@ -291,7 +380,7 @@ public class TranscriptPipelineUsingBDD {
             }
         }
         
-        JiraFetchResult fetchResult = ReadDataFromJIRADashBoardDetails(assistant, issueKeyInput);
+        JiraFetchResult fetchResult = ReadDataFromJIRADashBoardDetails(assistant, issueKeyInput, true);
         allTestCases.addAll(fetchResult.testCases());
         capturedRequirements = fetchResult.requirements();
 
@@ -338,7 +427,8 @@ public class TranscriptPipelineUsingBDD {
         try {
              if (capturedRequirements != null && !capturedRequirements.isEmpty()) {
                  System.out.println("Requirements found, length: " + capturedRequirements.length());
-                 JiraQualityResult quality = assistant.checkQuality("Analyze these requirements:\n" + capturedRequirements);
+                 String qaPrompt = loadPrompt("jira_quality_system_prompt.txt");
+                 JiraQualityResult quality = assistant.checkQuality(qaPrompt, "Analyze these requirements:\n" + capturedRequirements);
                  System.out.println("Quality analysis received: " + quality);
                  
                  qualityHtml = String.format(
@@ -371,7 +461,8 @@ public class TranscriptPipelineUsingBDD {
                 System.out.println("Going to feed AI");
 
                 try {
-                     TestCasesResponse response = assistant.generate("Identify use cases from this transcript: " + cleanText);
+                     String sysPrompt = loadPrompt("playwright_generation_system_prompt.txt");
+                     TestCasesResponse response = assistant.generate(sysPrompt, "Identify use cases from this transcript: " + cleanText);
                      if (response != null && response.testCases != null) {
                          for (PlaywrightTestCase testCase : response.testCases) {
                             testCases.add(testCase);
@@ -416,8 +507,8 @@ public class TranscriptPipelineUsingBDD {
             }
         }
     }
-    private static JiraFetchResult ReadDataFromJIRADashBoardDetails(UseCaseAssistant assistant, String issueKeyInput) throws Exception {
-        System.out.println("Reading data from JIRA for key: " + issueKeyInput);
+    private static JiraFetchResult ReadDataFromJIRADashBoardDetails(UseCaseAssistant assistant, String issueKeyInput, boolean generateTests) throws Exception {
+        System.out.println("Reading data from JIRA for key: " + issueKeyInput + ". Generate Tests: " + generateTests);
         final String JQL_QUERY = "key = '" + issueKeyInput + "' OR parent = '" + issueKeyInput + "'";
 
         final int PAGE_SIZE = 50;
@@ -462,10 +553,11 @@ public class TranscriptPipelineUsingBDD {
                     requirementsBuilder.append("<p><strong>Summary:</strong> ").append(issue.getSummary()).append("</p>");
                     requirementsBuilder.append("<div class='desc'>").append(issue.getDescription() != null ? issue.getDescription() : "No description").append("</div><hr/>");
 
-                    System.out.println("Reading requirements for Gemini analysis...");
-                    insertIntoVectorDB(requirementsData);
-
-                    testCases.addAll(analyzeWithGeminiAI(requirementsData, assistant, issueKey));
+                    if (generateTests) {
+                        System.out.println("Reading requirements for Gemini analysis...");
+                        insertIntoVectorDB(requirementsData);
+                        testCases.addAll(analyzeWithGeminiAI(requirementsData, assistant, issueKey));
+                    }
                 }
 
                 startAt += PAGE_SIZE;
@@ -509,7 +601,7 @@ public class TranscriptPipelineUsingBDD {
         System.out.println("Collection ready");
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 
-      // 3. Check the size of the data thats being send
+        // 3. Check the size of the data thats being send
         
         float[] vectorArray = embeddingModel.embed(requirementsData).content().vector();
            
@@ -555,7 +647,7 @@ public class TranscriptPipelineUsingBDD {
     private static List<PlaywrightTestCase> analyzeWithGeminiAI(String requirementsData, UseCaseAssistant assistant, String issueKey) {
          String prompt = "Act as a QA Engineer. Review these requirements for testability and edge cases and generate multiple test cases with scenarios and different feature files.\n\n"
                  + "IMPORTANT CONTEXT FOR PLAYWRIGHT GENERATION:\n"
-                 + "The application is running at http://127.0.0.1:8000/order/tracking. \n"
+                 + "MAKE SURE THAT APPLICATION DETAILS ARE CORRECTLY MENTIONED IN THE PROMPT and READ FROM THE JIRA REQUIREMENTS\n"
                  + "HTML Structure:\n"
                  + "- Input field ID: '#order_no'\n"
                  + "- Submit Button Text: 'Track Order'\n"
@@ -566,8 +658,9 @@ public class TranscriptPipelineUsingBDD {
                  + requirementsData;
         System.out.println("My prompt message is ===>" + prompt);
         List<PlaywrightTestCase> generatedTestCases = new ArrayList<>();
+        String sysPrompt = loadPrompt("playwright_generation_system_prompt.txt");
         try {
-            TestCasesResponse response = assistant.generate(prompt);
+            TestCasesResponse response = assistant.generate(sysPrompt, prompt);
             if (response != null && response.testCases != null) {
                 generatedTestCases = response.testCases;
                 for (PlaywrightTestCase testCase : generatedTestCases) {
@@ -781,6 +874,25 @@ public class TranscriptPipelineUsingBDD {
         }
     }
 
+    private static String loadPrompt(String filename) {
+        try {
+            // Try loading from src/main/resources/prompts/ (Local Dev)
+            java.nio.file.Path path = Paths.get("src/main/resources/prompts/" + filename);
+            if (Files.exists(path)) {
+                return Files.readString(path);
+            }
+            // Fallback: Try loading from classpath (Prod/Jar)
+            try (java.io.InputStream is = TranscriptPipelineUsingBDD.class.getResourceAsStream("/prompts/" + filename);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                 return reader.lines().collect(Collectors.joining("\n"));
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load prompt: " + filename + ". Using fallback empty string.");
+            e.printStackTrace();
+            return "";
+        }
+    }
+
     private static String pushToGitHub(String branchName, String commitMessage) {
         System.out.println("\n--- Pushing to GitHub ---");
         try {
@@ -794,98 +906,46 @@ public class TranscriptPipelineUsingBDD {
                 System.out.println("Initializing new Git repository...");
                 git = Git.init().setDirectory(localPath).call();
             }
-
+            
             // Check if HEAD exists (if not, it's a new repo with no commits)
             if (git.getRepository().resolve("HEAD") == null) {
-                System.out.println("Empty repository detected. Performing initial commit on default branch...");
-                // Add all files (respecting .gitignore)
+                // Initial commit
                 git.add().addFilepattern(".").call();
-                git.commit()
-                   .setMessage("Initial commit - Base project structure")
-                   .setAuthor("Antigravity AI", "ai@example.com")
-                   .call();
+                git.commit().setMessage("Initial commit").call();
             }
 
-            // Create new branch
-            System.out.println("Creating branch: " + branchName);
+            // Create branch
             git.branchCreate().setName(branchName).call();
             git.checkout().setName(branchName).call();
 
-            // Add generated test files
+            // Add all files
             git.add().addFilepattern("src/test/resources/features").call();
             git.add().addFilepattern("src/test/java/steps").call();
-
+            
             // Commit
-            System.out.println("Committing changes...");
-            git.commit().setMessage(commitMessage).setAuthor("Antigravity AI", "ai@example.com").call();
-
-            // Push (only if token is provided)
-            if (GITHUB_TOKEN == null || GITHUB_TOKEN.isEmpty() || GITHUB_TOKEN.equals("YOUR_GITHUB_TOKEN")) {
-                System.out.println("Push skipped: GITHUB_TOKEN is not set or invalid.");
-                return null;
-            }
-
-            System.out.println("Pushing to remote...");
-            git.push()
-               .setRemote(GITHUB_REPO_URL)
-               .setCredentialsProvider(new UsernamePasswordCredentialsProvider(GITHUB_USER, GITHUB_TOKEN))
-               .setForce(true) // Use force to ensure we can push to a new repo
-               .call();
-
-            System.out.println("Successfully pushed to branch: " + branchName);
-            System.out.println("Review URL: " + GITHUB_REPO_URL.replace(".git", "/tree/" + branchName));
-            return GITHUB_REPO_URL.replace(".git", "/tree/" + branchName);
+            git.commit().setMessage(commitMessage).call();
+            
+            // Push
+            // Assuming origin exists. Use UsernamePasswordCredentialsProvider with GITHUB_TOKEN
+             git.push()
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(GITHUB_USER, GITHUB_TOKEN))
+                .call();
+                
+             String repoUrl = GITHUB_REPO_URL.replace(".git", "");
+             return repoUrl + "/pull/new/" + branchName;
 
         } catch (Exception e) {
-            System.err.println("Error during Git operations: " + e.getMessage());
+            System.err.println("Error pushing to GitHub: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-
+    
+    // Helper for scrubbing code
     private static String scrubAndFixQuotes(String code) {
-        // 1. Remove preamble before first annotation
-         if (code.contains("@Given") || code.contains("@When") || code.contains("@Then")) {
-            int firstAnnotation = code.indexOf("@");
-            String prefix = code.substring(0, firstAnnotation);
-            if (prefix.contains("class") || prefix.contains("package") || prefix.contains("import")) {
-                code = code.substring(firstAnnotation);
-            }
-        }
-
-        // 2. Fix unescaped quotes in Cucumber annotations
-        // Regex to find @Then("...") and look inside the quotes
-        // We look for @Annotation(" CONTENT ")
-        Matcher matcher = Pattern.compile("(@(?:Given|When|Then)\\(\")(.*)(\"\\))").matcher(code);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            String content = matcher.group(2);
-            // Escape any " inside the content that isn't already escaped?
-            // Simple replace " with \"
-            // Note: This assumes the regex captured everything between the first and last quote.
-            // If the content is empty (""), this logic does nothing which is fine, but result would be "" which is valid.
-            // If content is "foo", result is \"foo\". @Then("\"foo\"") -> Valid.
-            String escaped = content.replace("\"", "\\\""); 
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(1) + escaped + matcher.group(3)));
-        }
-        matcher.appendTail(sb);
-        code = sb.toString();
-
-        // 3. Remove structural boilerplate
-        code = code.replaceAll("import\\s+.*;", "");
-        code = code.replaceAll("public\\s+class\\s+\\w+\\s*\\{", "");
-        code = code.replaceAll("class\\s+\\w+\\s*\\{", "");
-        code = code.replaceAll("private\\s+Page\\s+page;", "");
-        code = code.replaceAll("public\\s+\\w+Steps\\s*\\(Page\\s+page\\)\\s*\\{\\s*this.page\\s*=\\s*page;\\s*\\}", "");
-
-        // 4. Fix braces
-        long openBraces = code.chars().filter(ch -> ch == '{').count();
-        long closeBraces = code.chars().filter(ch -> ch == '}').count();
-        if (openBraces < closeBraces && code.trim().endsWith("}")) {
-            int lastBraceIndex = code.lastIndexOf("}");
-            code = code.substring(0, lastBraceIndex) + code.substring(lastBraceIndex + 1);
-        }
-        
-        return code;
+         if (code == null) return "";
+         // Remove markdown code blocks if any
+         code = code.replaceAll("```java", "").replaceAll("```", "");
+         return code;
     }
 }
