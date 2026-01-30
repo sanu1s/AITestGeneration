@@ -112,6 +112,11 @@ public class AgenticTestOrchestrator {
 
         // Basic Authentication
         app.before(ctx -> {
+            // Exclude /order/tracking from authentication
+            if (ctx.path().equals("/order/tracking")) {
+                return;
+            }
+
             // Check for Basic Auth
             var creds = ctx.basicAuthCredentials();
             String expectedUser = System.getenv().getOrDefault("ADMIN_USER", "admin");
@@ -138,7 +143,7 @@ public class AgenticTestOrchestrator {
         // Add Route for Order Tracking (Mock UI) - KEEPING THIS FOR TESTS
         app.get("/order/tracking", ctx -> {
             ctx.contentType("text/html");
-
+            ctx.result(AgenticTestOrchestrator.class.getResourceAsStream("/static/tracking.html"));
         });
         //For Mock UI---END
 
