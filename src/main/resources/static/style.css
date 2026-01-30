@@ -250,6 +250,22 @@ body {
     outline: none;
 }
 
+.prompt-editor-input {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid transparent;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Inter', monospace;
+    width: 100%;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.prompt-editor-input:focus {
+    border-color: var(--accent-blue);
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-blue), #0044ff);
     color: white;
