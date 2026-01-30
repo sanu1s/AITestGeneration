@@ -14,7 +14,7 @@ java {
 }
 
 application {
-    mainClass.set("org.example.TranscriptPipelineUsingBDD")
+    mainClass.set("org.example.AgenticTestOrchestrator")
 }
 
 tasks.named<JavaExec>("run") {
