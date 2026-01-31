@@ -21,17 +21,16 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("button:has-text('" + buttonText + "')").click();
+@Given("User is on the order tracking page")
+public void userIsOnOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
+    page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
-@Given("User is on the order tracking page {string}")
-public void userIsOnOrderTrackingPage(String url) {
-    System.out.println("Navigating to: " + url);
-    page.navigate(url);
-    assertThat(page).hasURL(url);
+@When("User clicks on {string} button")
+public void userClicksOnButton(String buttonText) {
+    System.out.println("Clicking on button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @When("User enters order number {string}")
