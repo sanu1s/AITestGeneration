@@ -4,245 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Tracking | Kordel</title>
+    <title>Order Tracking</title>
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #0B0E14;
-            --bg-card: rgba(30, 30, 46, 0.6);
-            --text-primary: #FFFFFF;
-            --text-secondary: #94A3B8;
-            --accent-blue: #3B82F6;
-            --accent-glow: rgba(59, 130, 246, 0.4);
-            --border: 1px solid rgba(255, 255, 255, 0.1);
-            --glass-blur: blur(20px);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            background-image: radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            color: var(--text-primary);
+            background-color: #f4f7f6;
         }
 
         .container {
-            background: var(--bg-card);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            padding: 40px;
-            border-radius: 20px;
-            border: var(--border);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             text-align: center;
         }
 
         h2 {
-            margin-bottom: 8px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
-        .subtext {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 32px;
-        }
-
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
+            color: #333;
         }
 
         input {
             width: 100%;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
         }
 
         button {
-            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
             font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 20px var(--accent-glow);
         }
 
         button:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1);
-        }
-
-        button:active {
-            transform: translateY(0);
+            background-color: #0056b3;
         }
 
         .result {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 0.95rem;
+            margin-top: 1rem;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
             min-height: 20px;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
-        }
-
-        .result.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .result.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-            /* Green-400 */
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .result.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            /* Red-400 */
-            border: 1px solid rgba(239, 68, 68, 0.2);
         }
     </style>
-</head>
-
-<body>
-    <div class="container">
-        <h2>Items Tracker</h2>
-        <div class="subtext">Enter your order ID to track status</div>
-
-        <div class="input-wrapper">
-            <input type="text" id="order_no" placeholder="e.g. ORD12345">
-        </div>
-
-        <button onclick="trackOrder()">Track Order</button>
-        <div class="result"></div>
-    </div>
-
-    <script>
-        function trackOrder() {
-            const orderNo = document.getElementById('order_no').value.trim();
-            const resultDiv = document.querySelector('.result');
-
-            // Reset
-            resultDiv.className = 'result';
-            resultDiv.innerText = "";
-
-            if (!orderNo) {
-                showResult("Order number must be numeric", "error");
-                return;
-            }
-
-            if (orderNo.length < 2) {
-                showResult("Invalid Order No", "error"); // Orange logic mapped to error for consistency in dark mode
-                return;
-            }
-
-            const hasNumber = /\d/.test(orderNo);
-            if (!hasNumber) {
-                showResult("Order number must be numeric", "error");
-                return;
-            }
-
-            // Success
-            showResult("The order status Delayed. Expected Delivery Date: 2026-02-01", "success");
-        }
-
-        function showResult(message, type) {
-            const resultDiv = document.querySelector('.result');
-            resultDiv.innerText = message;
-            resultDiv.classList.add('show', type);
-        }
-    </script>
-</body>
-
-</html>
-body {
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-background-color: #f4f7f6;
-}
-
-.container {
-background: white;
-padding: 2rem;
-border-radius: 12px;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-width: 100%;
-max-width: 400px;
-text-align: center;
-}
-
-h2 {
-margin-bottom: 1.5rem;
-color: #333;
-}
-
-input {
-width: 100%;
-padding: 10px;
-margin-bottom: 1rem;
-border: 1px solid #ddd;
-border-radius: 6px;
-box-sizing: border-box;
-}
-
-button {
-background-color: #007bff;
-color: white;
-border: none;
-padding: 10px 20px;
-border-radius: 6px;
-cursor: pointer;
-width: 100%;
-font-size: 1rem;
-}
-
-button:hover {
-background-color: #0056b3;
-}
-
-.result {
-margin-top: 1rem;
-padding: 10px;
-border-radius: 6px;
-font-weight: 600;
-min-height: 20px;
-}
-</style>
 </head>
 
 <body>
