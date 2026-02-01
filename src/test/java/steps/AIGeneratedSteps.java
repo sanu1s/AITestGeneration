@@ -21,34 +21,40 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the " + buttonText + " button");
-    page.locator("button:has-text('" + buttonText + "')").click();
-}
-
 @Given("User is on the order tracking page")
 public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
-@Then("The order status result should display {string}")
-public void theOrderStatusResultShouldDisplay(String expectedMessage) {
-    System.out.println("Executing: The order status result should display: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@When("User clicks the Track Order button")
+public void userClicksTheTrackOrderButton() {
+    System.out.println("Clicking Track Order button");
+    page.locator("button:has-text('Track Order')").click();
+}
+
+@When("User leaves order number field empty")
+public void userLeavesOrderNumberFieldEmpty() {
+    System.out.println("Leaving order number field empty");
+    page.locator("#order_no").fill(""); // Ensure the field is empty
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number: " + orderNo);
+    System.out.println("Entering order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Executing: The error message should display: " + errorMessage);
-    assertThat(page.locator(".result")).containsText(errorMessage);
+public void theErrorMessageShouldDisplay(String expectedError) {
+    System.out.println("Verifying error message: " + expectedError);
+    assertThat(page.locator(".result")).containsText(expectedError);
+}
+
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 }

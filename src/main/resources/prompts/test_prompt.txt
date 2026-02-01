@@ -1,3 +1,3 @@
 This is sample Prompt..
 Users are expected to provide the GHERKINS steps to create the test cases based upon the needs
-Users can provide the details in Upper case in order to stress any particular requirements
+Users can provide the details in Upper case in order to stress upon  any particular requirements
