@@ -1,7 +1,7 @@
 Feature: Order Tracking Service - Positive Scenarios
 
   Scenario: Successfully track another valid order number
-    Given I am on the order tracking page
-    When I enter order number "ORD456"
-    And I click the "Track Order" button
-    Then I should see the order status "The order status Delayed"
+    Given User is on the order tracking page "http://127.0.0.1:8088/order/tracking"
+    When User enters order number "ORD456"
+    And User clicks the "Track Order" button
+    Then The order status should display "The order status Delayed"
