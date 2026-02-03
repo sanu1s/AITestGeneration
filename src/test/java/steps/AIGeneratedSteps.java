@@ -22,33 +22,33 @@ public class AIGeneratedSteps {
     }
 
 @When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the " + buttonText + " button");
+public void clickTrackButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
-    page.navigate("http://localhost:8080/track-order");
+public void navigateToTrackingPage() {
+    System.out.println("Navigating to order tracking page");
+    page.navigate("http://localhost:8080/track-order"); // Assuming a URL for the tracking page
+}
+
+@Then("The status message should display {string}")
+public void verifyStatusMessage(String msg) {
+    System.out.println("Verifying status message: " + msg);
+    assertThat(page.locator(".result")).containsText(msg);
 }
 
 @When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
+public void enterOrder(String orderNo) {
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Executing: The error message should display " + errorMessage);
-    assertThat(page.locator(".error")).containsText(errorMessage);
-}
-
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String statusMessage) {
-    System.out.println("Executing: The order status should display " + statusMessage);
-    assertThat(page.locator(".result")).containsText(statusMessage);
+public void verifyErrorMessage(String msg) {
+    System.out.println("Verifying error message: " + msg);
+    assertThat(page.locator(".error")).containsText(msg);
 }
 
 }
