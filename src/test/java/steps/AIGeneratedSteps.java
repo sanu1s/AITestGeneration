@@ -21,35 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
+@Given("User is on the Price Adjustment Request page")
+public void userIsOnPriceAdjustmentPage() {
+    System.out.println("Executing: User is on the Price Adjustment Request page");
+    page.navigate("https://example.com/price-adjustment");
+}
+
 @When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
+public void clickButton(String buttonText) {
     System.out.println("Executing: User clicks the " + buttonText + " button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
-    page.navigate("https://example.com/track-order");
-    assertThat(page).hasURL("https://example.com/track-order");
+@Then("A success message should display {string}")
+public void verifySuccessMessage(String msg) {
+    System.out.println("Executing: A success message should display " + msg);
+    assertThat(page.locator(".result")).containsText(msg);
 }
 
-@Then("The status message should display {string}")
-public void theStatusMessageShouldDisplay(String message) {
-    System.out.println("Executing: The status message should display " + message);
-    assertThat(page.locator(".result")).containsText(message);
+@Then("An error message should display {string}")
+public void verifyErrorMessage(String msg) {
+    System.out.println("Executing: An error message should display " + msg);
+    assertThat(page.locator(".error")).containsText(msg);
 }
 
 @When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
+public void enterOrderNumber(String orderNo) {
     System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
-}
-
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String message) {
-    System.out.println("Executing: The error message should display " + message);
-    assertThat(page.locator(".error")).containsText(message);
 }
 
 }
