@@ -23,39 +23,32 @@ public class AIGeneratedSteps {
 
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
+    System.out.println("Executing: User clicks the " + buttonText + " button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@When("User leaves the order number field empty")
-public void userLeavesTheOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty.");
-    page.locator("#order_no").fill("");
-}
-
-@Given("User is on the order tracking page {string}")
-public void userIsOnTheOrderTrackingPage(String url) {
-    System.out.println("Navigating to: " + url);
-    page.navigate(url);
-    assertThat(page).hasURL(url);
+@Given("User is on the order tracking page")
+public void userIsOnOrderTrackingPage() {
+    System.out.println("Executing: User is on the order tracking page");
+    page.navigate("http://localhost:8080/track-order");
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+    System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Executing: The error message should display " + errorMessage);
+    assertThat(page.locator(".error")).containsText(errorMessage);
 }
 
-@Then("The result message should display {string}")
-public void theResultMessageshouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String statusMessage) {
+    System.out.println("Executing: The order status should display " + statusMessage);
+    assertThat(page.locator(".result")).containsText(statusMessage);
 }
 
 }
