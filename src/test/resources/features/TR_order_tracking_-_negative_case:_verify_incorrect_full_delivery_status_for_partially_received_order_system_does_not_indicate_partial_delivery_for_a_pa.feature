@@ -1,0 +1,8 @@
+Feature: Order Tracking - Negative Case: Verify Incorrect Full Delivery Status for Partially Received Order
+
+  Scenario: System Does Not Indicate Partial Delivery for a Partially Received Order
+    Given User is on the order tracking page
+    When User enters order number "PO_MISSING_PARTIAL_4"
+    And User clicks the "Track Order" button
+    Then The status message should display "Shipped"
+    And The status message should not display "Missing Items"
