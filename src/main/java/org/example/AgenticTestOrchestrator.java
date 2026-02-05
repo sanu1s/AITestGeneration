@@ -159,7 +159,7 @@ public class AgenticTestOrchestrator {
 
             if (creds == null || !expectedUser.equals(creds.getUsername()) || !expectedPass.equals(creds.getPassword())) {
                 ctx.header("WWW-Authenticate", "Basic realm=\"VectorDB AntiGravity\"");
-                ctx.status(401).result("Unauthorized: Please log in.");
+                throw new io.javalin.http.UnauthorizedResponse("Unauthorized: Please log in.");
             }
         });
 
