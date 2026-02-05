@@ -3,6 +3,9 @@ package org.example;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import org.apache.hadoop.conf.Configuration;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import static io.qdrant.client.WithPayloadSelectorFactory.enable;
@@ -55,6 +58,11 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import java.io.FileOutputStream;
+
 import static io.qdrant.client.PointIdFactory.id;
 import static io.qdrant.client.ValueFactory.value;
 
@@ -75,6 +83,12 @@ public class AgenticTestOrchestrator {
     record PipelineResult(String prUrl, String acceptanceCriteria, String jiraQuality) {}
     record JiraFetchResult(List<PlaywrightTestCase> testCases, String requirements) {}
     record JiraQualityResult(String score, String reasoning) {}
+    
+    // New Records for ElitePDM
+    record WorkItem(String summary, String description, String acceptanceCriteria, String type) {}
+    record RequirementParseResult(List<WorkItem> items) {}
+    record CreatedIssue(String key, String summary, String url) {}
+    record PdmUploadResult(List<CreatedIssue> issues) {}
 
     private static final String JIRA_URL = "https://techsavy.atlassian.net";
     private static final String JIRA_USER = "arjunkrishnansuresh@gmail.com";
@@ -91,6 +105,15 @@ public class AgenticTestOrchestrator {
 
         @SystemMessage("{{prompt}}")
         TestCasesResponse generate(@V("prompt") String systemPrompt, @UserMessage String transcript);
+        
+        @SystemMessage("You are an expert Product Owner. Analyze the uploaded requirements document and extract a list of distinct Work Items (User Stories or Tasks) to be created in JIRA.\n" +
+                      "For each item, provide:\n" +
+                      "- summary: A concise title\n" +
+                      "- description: Detailed description\n" +
+                      "- acceptanceCriteria: A bulleted list of acceptance criteria\n" +
+                      "- type: 'Story' or 'Task'\n" +
+                      "Return the result as a JSON object with a list of items.")
+        RequirementParseResult parseRequirements(@UserMessage String documentContent);
     }
 
     @SuppressWarnings("null")
@@ -147,22 +170,61 @@ public class AgenticTestOrchestrator {
         });
         //For Mock UI---END
 
+        //For Mock UI---END
+
         app.post("/run", ctx -> {
-            String body = ctx.body();
-            System.out.println("DEBUG: Received body: '" + body + "'");
             String epicKey = "";
-            if (body.contains("epicKey")) {
-                 // Simple manual JSON parse
-                 int startIndex = body.indexOf("epicKey") + 9; // "epicKey":
-                 epicKey = body.substring(startIndex).replaceAll("[^a-zA-Z0-9-]", "");
+            String transcriptPath = null;
+            String targetColumn = "Text"; // Default
+
+            if (ctx.isMultipart()) {
+                epicKey = ctx.formParam("epicKey");
+                String colParam = ctx.formParam("columnName");
+                if (colParam != null && !colParam.trim().isEmpty()) {
+                    targetColumn = colParam.trim();
+                }
+                
+                io.javalin.http.UploadedFile uploadedFile = ctx.uploadedFile("transcript");
+                if (uploadedFile != null) {
+                    System.out.println("DEBUG: Received transcript file: " + uploadedFile.filename());
+                    String filename = uploadedFile.filename();
+                    
+                    try {
+                         // Decide formatting based on extension
+                         if (filename.endsWith(".xlsx") || filename.endsWith(".xls")) {
+                             // Convert Excel to CSV
+                             transcriptPath = convertExcelToCSV(uploadedFile.content(), filename);
+                             System.out.println("DEBUG: Converted Excel to CSV at: " + transcriptPath);
+                         } else {
+                             // Assume CSV
+                             File tempFile = File.createTempFile("transcript_", "_" + filename);
+                             tempFile.deleteOnExit();
+                             try (java.io.InputStream is = uploadedFile.content()) {
+                                 Files.copy(is, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                             }
+                             transcriptPath = tempFile.getAbsolutePath();
+                             System.out.println("DEBUG: Saved CSV transcript to: " + transcriptPath);
+                         }
+                    } catch (IOException e) {
+                         System.err.println("Error saving/converting upload: " + e.getMessage());
+                    }
+                }
             } else {
-                 // Fallback for raw string
-                 epicKey = body.trim();
+                 String body = ctx.body();
+                 System.out.println("DEBUG: Received body: '" + body + "'");
+                 if (body.contains("epicKey")) {
+                      int startIndex = body.indexOf("epicKey") + 9;
+                      epicKey = body.substring(startIndex).replaceAll("[^a-zA-Z0-9-]", "");
+                 } else {
+                      epicKey = body.trim();
+                 }
             }
             
             final String finalEpicKey = epicKey;
+            final String finalTranscriptPath = transcriptPath;
+            final String finalTargetColumn = targetColumn;
             
-            System.out.println("Received request to run pipeline for: " + finalEpicKey);
+            System.out.println("Received request to run pipeline for: " + finalEpicKey + ", Col: " + finalTargetColumn);
             
             if (finalEpicKey.isEmpty()) {
                 ctx.status(400).result("Invalid Key");
@@ -175,7 +237,7 @@ public class AgenticTestOrchestrator {
             CompletableFuture.runAsync(() -> {
                 try {
                     jobs.put(jobId, new JobStatus("IN_PROGRESS", "Executing pipeline...", null, null, null, null));
-                    PipelineResult result = executePipeline(finalEpicKey);
+                    PipelineResult result = executePipeline(finalEpicKey, finalTranscriptPath, finalTargetColumn);
                     jobs.put(jobId, new JobStatus("COMPLETED", "Pipeline finished successfully.", result.prUrl(), "/report/index.html", result.acceptanceCriteria(), result.jiraQuality()));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -332,10 +394,90 @@ public class AgenticTestOrchestrator {
             
             ctx.json(Map.of("jobId", jobId, "status", "IN_PROGRESS", "message", "Fetching started"));
         });
+
+        // ElitePDM: Upload and Create Work Items
+        app.post("/api/pdm/upload-requirements", ctx -> {
+            try {
+                // Handle File Upload
+                var uploadedFile = ctx.uploadedFile("file");
+                if (uploadedFile == null) {
+                    ctx.status(400).result("No file uploaded");
+                    return;
+                }
+
+                // Read Content (Basic Text Support for now)
+                String content = new String(uploadedFile.content().readAllBytes());
+                // Simple check if it's PDF, we might need PDFBox, but for now assuming Text/Markdown/JSON
+                
+                // Initialize AI
+                String geminiApiKey = System.getenv("GEMINI_API_KEY");
+                ChatModel model = GoogleAiGeminiChatModel.builder()
+                        .apiKey(geminiApiKey)
+                        .modelName("gemini-2.5-flash")
+                        .temperature(0.2) // Low temp for structured extraction
+                        .timeout(java.time.Duration.ofSeconds(90))
+                        .build();
+                UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
+
+                // Analyze & Parse
+                RequirementParseResult result = assistant.parseRequirements("Analyze this document:\n" + content);
+                
+                // Create JIRA Tickets
+                List<CreatedIssue> createdIssues = new ArrayList<>();
+                if (result.items() != null) {
+                    for (WorkItem item : result.items()) {
+                         // Create Issue
+                         CreatedIssue issue = createJiraIssue(item.summary(), item.description() + "\n\n*Acceptance Criteria:*\n" + item.acceptanceCriteria(), item.type());
+                         createdIssues.add(issue);
+                    }
+                }
+
+                ctx.json(new PdmUploadResult(createdIssues));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error processing requirements: " + e.getMessage());
+            }
+        });
     }
 
-    public static PipelineResult executePipeline(String issueKeyInput) throws Exception {
-        boolean isTranscriptEnabled = false;
+    // Helper to convert Excel to CSV
+    private static String convertExcelToCSV(java.io.InputStream is, String filename) throws IOException {
+        Workbook workbook = null;
+        if (filename.endsWith(".xlsx")) {
+            workbook = new XSSFWorkbook(is);
+        } else {
+            workbook = new HSSFWorkbook(is);
+        }
+        
+        Sheet sheet = workbook.getSheetAt(0); // Read first sheet
+        File tempCsv = File.createTempFile("converted_", ".csv");
+        tempCsv.deleteOnExit();
+        
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempCsv))) {
+            DataFormatter formatter = new DataFormatter();
+            for (org.apache.poi.ss.usermodel.Row row : sheet) {
+                List<String> cells = new ArrayList<>();
+                // Iterate over cells including blank ones to preserve column structure if needed (though iterator skips blanks usually)
+                 // Better: use loop with lastCellNum
+                int lastCell = row.getLastCellNum();
+                 for (int i = 0; i < lastCell; i++) {
+                     Cell cell = row.getCell(i);
+                     String val = formatter.formatCellValue(cell);
+                     // Escape quotes for CSV
+                     val = val.replace("\"", "\"\"");
+                     cells.add("\"" + val + "\"");
+                 }
+                 writer.write(String.join(",", cells));
+                 writer.newLine();
+            }
+        }
+        workbook.close();
+        return tempCsv.getAbsolutePath();
+    }
+
+    public static PipelineResult executePipeline(String issueKeyInput, String transcriptPath, String targetColumn) throws Exception {
+        boolean isTranscriptEnabled = (transcriptPath != null && !transcriptPath.isEmpty());
         // 0. Initialize HDFS Configuration
         Configuration conf = new Configuration();
         conf.set("fs.viewfs.impl", "org.apache.hadoop.fs.viewfs.ViewFileSystem");
@@ -385,9 +527,14 @@ public class AgenticTestOrchestrator {
             }
         }
         
-        JiraFetchResult fetchResult = ReadDataFromJIRADashBoardDetails(assistant, issueKeyInput, true);
-        allTestCases.addAll(fetchResult.testCases());
-        capturedRequirements = fetchResult.requirements();
+        if (!"UPLOAD-ONLY".equals(issueKeyInput)) {
+            JiraFetchResult fetchResult = ReadDataFromJIRADashBoardDetails(assistant, issueKeyInput, true);
+            allTestCases.addAll(fetchResult.testCases());
+            capturedRequirements = fetchResult.requirements();
+        } else {
+            System.out.println("Skipping Jira fetch (Upload Only mode)");
+            capturedRequirements = "Generated from Uploaded Transcript";
+        }
 
         if(isTranscriptEnabled){
         // 3. Clean Noisy Data using Spark SQL Regex
@@ -399,13 +546,37 @@ public class AgenticTestOrchestrator {
                 .config("spark.driver.host", "localhost") // Ensure the driver host is also local
                 .getOrCreate();
         // 3.Loading a CSV file
+        // Use uploaded path if available, else default (though logic implies we only enter if enabled)
+        String csvPath = (transcriptPath != null) ? transcriptPath : "src/main/resources/Data.csv";
+        System.out.println("Reading transcript from: " + csvPath);
+        
         Dataset<Row> rawTranscripts = spark.read()
                 .option("header", "true")
                 .option("inferSchema", "true")
-                .csv("src/main/resources/Data.csv");
+                .csv(csvPath);
+        
+        // Use custom column if provided (targetColumn -> Text rename logic)
+        // If the file is our converted CSV, the headers should match the Excel headers.
+        System.out.println("Available columns: " + java.util.Arrays.toString(rawTranscripts.columns()));
+        
+        Dataset<Row> cleanedTranscripts;
+        
+        // If targetColumn is "Text", we proceed as usual. 
+        // If different, we rename or select it as "Text" to satisfy downstream logic expecting "Text".
+        if (!"Text".equals(targetColumn) && java.util.Arrays.asList(rawTranscripts.columns()).contains(targetColumn)) {
+             System.out.println("Using target column: " + targetColumn);
+             cleanedTranscripts = rawTranscripts.withColumnRenamed(targetColumn, "Text");
+        } else {
+             cleanedTranscripts = rawTranscripts;
+        }
+
         String noisePattern = "(?i)\\b(um|uh|you know|like|actually)\\b|\\[\\d{2}:\\d{2}:\\d{2}\\]";
-        Dataset<Row> cleanedTranscripts = rawTranscripts.withColumn("Text",
-                regexp_replace(col("Text"), noisePattern, ""));
+        // Ensure "Text" column exists now
+        if (java.util.Arrays.asList(cleanedTranscripts.columns()).contains("Text")) {
+             cleanedTranscripts = cleanedTranscripts.withColumn("Text", regexp_replace(col("Text"), noisePattern, ""));
+        } else {
+             System.out.println("WARNING: Column 'Text' (or '" + targetColumn + "') not found. Skipping cleanup.");
+        }
         // 5. Feed cleaned data to LLM
          allTestCases.addAll(feedDataCleanedUpDatatoLLM(cleanedTranscripts, assistant));
          spark.stop();
@@ -895,6 +1066,38 @@ public class AgenticTestOrchestrator {
             System.err.println("Failed to load prompt: " + filename + ". Using fallback empty string.");
             e.printStackTrace();
             return "";
+        }
+    }
+
+    private static CreatedIssue createJiraIssue(String summary, String description, String type) {
+        try {
+            JiraRestClient restClient = new AsynchronousJiraRestClientFactory()
+                .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN);
+
+            // 10001 = Story, 10002 = Task (Standard IDs, might vary)
+            // Ideally we fetch IssueType ID by name, but hardcoding for MVP or defaulting to Story
+            Long issueTypeId = type.equalsIgnoreCase("Task") ? 10002L : 10001L;
+
+            IssueInputBuilder issueBuilder = new IssueInputBuilder("PROJ", issueTypeId, summary); // Assuming PROJ key, need to dynamic?
+            // Actually, we should probably ask user for Project Key or use a default
+            // For now, let's hardcode 'SCRUM' or 'KAN' or extract from Env. 
+            // Better: use "SCRUM" as default or "KAN"
+            // Let's use a project key variable
+            String projectKey = "KAN"; // Default
+            
+            issueBuilder.setDescription(description);
+            issueBuilder.setProjectKey(projectKey);
+
+            IssueInput input = issueBuilder.build();
+            BasicIssue issue = restClient.getIssueClient().createIssue(input).claim();
+            
+            restClient.close();
+            
+            return new CreatedIssue(issue.getKey(), summary, JIRA_URL + "/browse/" + issue.getKey());
+
+        } catch (Exception e) {
+            System.err.println("Failed to create issue: " + e.getMessage());
+            return new CreatedIssue("ERROR", summary + " (Failed)", "#");
         }
     }
 

@@ -140,6 +140,10 @@ dependencies {
     // Allure
     testImplementation("io.qameta.allure:allure-cucumber7-jvm:2.25.0")
     testImplementation("io.qameta.allure:allure-junit-platform:2.25.0") // Removed to avoid Runner class appearing in reports
+
+    // Apache POI for Excel Support
+    implementation("org.apache.poi:poi:5.2.5")
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
 }
 
 allure {

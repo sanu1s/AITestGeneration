@@ -1,7 +1,0 @@
-Feature: Email Status Tracking Functionality - Negative Cases
-
-  Scenario: Display error for an invalid tracking ID
-    Given User is on the email status tracking page
-    When User enters tracking ID "INVALID000"
-    And User clicks the "Track Email" button
-    Then The error message should display "Invalid Email Tracking ID"

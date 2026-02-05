@@ -1,5 +1,0 @@
-Feature: Customer Support Initial Routing Prompt Verification (Negative Test Cases)
-
-  Scenario: Verify the routing prompt is not displayed on an irrelevant page
-    Given User navigates to the "Homepage" page
-    Then The page should not display the message "I understand that you would to speak with a customer care representative."
