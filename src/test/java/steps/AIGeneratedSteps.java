@@ -23,32 +23,50 @@ public class AIGeneratedSteps {
 
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
+    System.out.println("Executing: User clicks the " + buttonText + " button");
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Given("User is on the Order Tracking page")
+@Given("User is on the document upload page")
+public void userIsOnDocumentUploadPage() {
+    System.out.println("Executing: User is on the document upload page");
+    page.navigate("/upload");
+}
+
+@Then("The upload status should display {string}")
+public void theUploadStatusShouldDisplay(String statusMessage) {
+    System.out.println("Executing: The upload status should display " + statusMessage);
+    assertThat(page.locator("#upload-status")).containsText(statusMessage);
+}
+
+@Given("User is on the order tracking page")
 public void userIsOnOrderTrackingPage() {
-    System.out.println("Navigating to Order Tracking page");
-    page.navigate("http://127.0.0.1:8088/order/tracking");
+    System.out.println("Navigating to order tracking page");
+    page.navigate("/track-order");
+}
+
+@When("User selects the file {string} for upload")
+public void userSelectsTheFileForUpload(String fileName) {
+    System.out.println("Executing: User selects the file " + fileName + " for upload");
+    page.locator("input[type='file']").setInputFiles(Paths.get(fileName));
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
+    System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedError) {
-    System.out.println("Verifying error message: " + expectedError);
-    assertThat(page.locator(".result")).containsText(expectedError);
+public void theErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Executing: The error message should display " + errorMessage);
+    assertThat(page.locator(".error")).containsText(errorMessage);
 }
 
 @Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+public void theOrderStatusShouldDisplay(String statusMessage) {
+    System.out.println("Executing: The order status should display " + statusMessage);
+    assertThat(page.locator(".result")).containsText(statusMessage);
 }
 
 }
