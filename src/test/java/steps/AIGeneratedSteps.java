@@ -21,12 +21,6 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User leaves the order number empty")
-public void userLeavesOrderNumberEmpty() {
-    System.out.println("Leaving order number empty");
-    page.locator("#order_no").fill("");
-}
-
 @When("User clicks the {string} button")
 public void userClicksTheButton(String buttonText) {
     System.out.println("Clicking button: " + buttonText);
@@ -34,7 +28,7 @@ public void userClicksTheButton(String buttonText) {
 }
 
 @Given("User is on the Order Tracking page")
-public void userIsOnOrderTrackingPage() {
+public void userIsOnTheOrderTrackingPage() {
     System.out.println("Navigating to Order Tracking page");
     page.navigate("http://127.0.0.1:8088/order/tracking");
 }
@@ -45,16 +39,16 @@ public void userEntersOrderNumber(String orderNo) {
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Verifying error message: " + errorMessage);
-    assertThat(page.locator(".result")).containsText(errorMessage);
-}
-
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
+@Then("The order status should be displayed as {string}")
+public void theOrderStatusShouldBeDisplayedAs(String expectedStatus) {
     System.out.println("Verifying order status: " + expectedStatus);
     assertThat(page.locator(".result")).containsText(expectedStatus);
+}
+
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String expectedErrorMessage) {
+    System.out.println("Verifying error message: " + expectedErrorMessage);
+    assertThat(page.locator(".result")).containsText(expectedErrorMessage);
 }
 
 }
