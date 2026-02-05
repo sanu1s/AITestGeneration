@@ -21,34 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the \"Track Order\" button")
-public void clickTrackOrderButton() {
-    System.out.println("Executing: User clicks the \"Track Order\" button");
+@Given("User is on the order tracking page")
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
+    page.navigate("http://localhost:8080/track-order");
+}
+
+@When("User clicks the Track Order button")
+public void userClicksTheTrackOrderButton() {
+    System.out.println("Clicking Track Order button");
     page.locator("button:has-text('Track Order')").click();
 }
 
-@Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
-    page.navigate("https://example.com/trackorder");
-}
-
 @When("User enters order number {string}")
-public void enterOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
+public void userEntersOrderNumber(String orderNo) {
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
-public void verifyErrorMessage(String errorMessage) {
-    System.out.println("Executing: The error message should display " + errorMessage);
-    assertThat(page.locator(".error")).containsText(errorMessage);
+public void theErrorMessageShouldDisplay(String expectedError) {
+    System.out.println("Verifying error message: " + expectedError);
+    assertThat(page.locator(".error")).containsText(expectedError);
 }
 
 @Then("The order status should display {string}")
-public void verifyOrderStatus(String statusMessage) {
-    System.out.println("Executing: The order status should display " + statusMessage);
-    assertThat(page.locator(".result")).containsText(statusMessage);
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 }
