@@ -14,10 +14,7 @@
 
 <body>
 
-    <!-- Mobile Menu Toggle -->
-    <button id="menu-toggle" class="menu-toggle">
-        <i class="fas fa-bars"></i>
-    </button>
+
 
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -25,7 +22,53 @@
             <i class="fas fa-cube"></i> Kordel AI
         </div>
         <ul class="nav-links">
-            <li class="active"><i class="fas fa-th-large"></i> Missions</li>
+            <li class="active has-children">
+                <div class="nav-item-wrapper" id="tab-missions" style="cursor: pointer;">
+                    <i class="fas fa-th-large"></i> Missions
+                    <i class="fas fa-chevron-down"
+                        style="margin-left: auto; font-size: 0.8em; transition: transform 0.3s;"></i>
+                </div>
+                <ul class="sub-nav-links" style="display: none;">
+                    <!-- Elite QE -->
+                    <li id="tab-elite-qe" class="active">
+                        <div class="nav-item-wrapper" style="cursor: pointer;">
+                            <i class="fas fa-bug"></i> Elite QE
+                            <i class="fas fa-chevron-down"
+                                style="margin-left: auto; font-size: 0.8em; transition: transform 0.3s;"></i>
+                        </div>
+                        <ul class="nested-nav" style="display: none;">
+                            <li id="tab-jira-lens"><i class="fas fa-search"></i> JIRA Scanner</li>
+                            <li id="tab-transcript-upload"><i class="fas fa-file-upload"></i> Transcript Uploads</li>
+                        </ul>
+                    </li>
+
+                    <!-- Elite PMO -->
+                    <li id="tab-elite-pmo">
+                        <div class="nav-item-wrapper" style="cursor: pointer;">
+                            <i class="fas fa-tasks"></i> Elite PMO
+                            <i class="fas fa-chevron-down"
+                                style="margin-left: auto; font-size: 0.8em; transition: transform 0.3s;"></i>
+                        </div>
+                        <ul class="nested-nav" style="display: none;">
+                            <!-- Placeholder or future items -->
+                            <li id="tab-pmo-overview" style="font-style: italic; opacity: 0.7;">Coming Soon...</li>
+                        </ul>
+                    </li>
+
+                    <!-- Elite PDM -->
+                    <li id="tab-elite-pdm">
+                        <div class="nav-item-wrapper" style="cursor: pointer;">
+                            <i class="fas fa-project-diagram"></i> Elite PDM
+                            <i class="fas fa-chevron-down"
+                                style="margin-left: auto; font-size: 0.8em; transition: transform 0.3s;"></i>
+                        </div>
+                        <ul class="nested-nav" style="display: none;">
+                            <li id="tab-jira-creator"><i class="fas fa-plus-circle"></i> JIRA Creator</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li id="tab-settings"><i class="fas fa-cog"></i> Settings</li>
         </ul>
     </aside>
 
@@ -57,8 +100,11 @@
                     <div class="discovery-graph">
                         <div class="graph-placeholder" id="brainContainer">
                             <div class="brain-images-container">
-                                <img src="futuristic_robot.png" alt="Robotic Agent" class="brain-img">
-                                <img src="agentic_robot.png" alt="Kordel Agent" class="brain-img kordel-img">
+                                <!-- Holographic Brain Display -->
+                                <div class="hologram-container">
+                                    <img src="holographic_brain.png" alt="Active AI Core" class="brain-img hologram">
+
+                                </div>
                             </div>
                             <div class="brain-status-text">
                                 <h3 id="brainLabel">QE Agent At Work</h3>
@@ -69,10 +115,12 @@
                 </div>
 
                 <!-- Activity Feed / Control -->
-                <div class="card">
+                <!-- Activity Feed / Control - JIRA Scanner View -->
+                <!-- Activity Feed / Control - JIRA Scanner View -->
+                <div class="card" id="view-jira-lens" style="display: none;">
                     <div class="card-header">
-                        <span>Test Case Generation</span>
-                        <i class="fas fa-ellipsis-h"></i>
+                        <span>JIRA Scanner</span>
+                        <i class="fas fa-search"></i>
                     </div>
                     <div class="activity-feed-container">
                         <div class="status-item">
@@ -107,23 +155,37 @@
                     </div>
                 </div>
 
-                <!-- Execution Lab (Logs) -->
-                <div class="card">
+                <!-- Transcript Upload View (Hidden by Default) -->
+                <div class="card" id="view-transcript-upload" style="display: none;">
                     <div class="card-header">
-                        <span>Execution Lab</span>
-                        <i class="fas fa-terminal"></i>
+                        <span>Transcript Upload</span>
+                        <i class="fas fa-file-upload"></i>
                     </div>
-                    <div id="consoleOutput" class="execution-lab">
-                        <div class="log-entry">Waiting for input...</div>
+                    <div class="activity-feed-container">
+                        <div class="status-item">
+                            <i class="fas fa-file-alt test-gen-icon" style="font-size: 24px;"></i>
+                            <div style="flex: 1;">
+                                <strong>Upload Call Transcript</strong><br>
+                                <span style="font-size: 0.8rem; color: var(--text-tertiary);">Generate test cases from
+                                    call logs</span>
+                            </div>
+                        </div>
+
+                        <div class="control-panel">
+                            <div class="input-group">
+                                <input type="file" id="transcriptFile" accept=".txt,.csv,.json">
+                            </div>
+                            <div class="input-group">
+                                <input type="text" id="columnName" placeholder="Target Column (Default: Text)">
+                            </div>
+                            <button id="runUploadBtn" class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-upload"></i> Generate from Upload
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-            </div>
-
-            <!-- Right Column -->
-            <div class="right-panel">
-
-                <!-- Prompt Engineering (Top) -->
+                <!-- Prompt Engineering (Moved from Right) -->
                 <div class="card">
                     <div class="card-header">
                         <span>Prompt Engineering</span>
@@ -145,17 +207,26 @@
                     </div>
                 </div>
 
-                <!-- NEW: Jira Quality Analysis -->
+                <!-- Execution Lab (Logs) -->
                 <div class="card">
                     <div class="card-header">
-                        <span>Jira Quality Analysis</span>
-                        <i class="fas fa-check-circle"></i>
+                        <span>Execution Lab</span>
+                        <i class="fas fa-terminal"></i>
                     </div>
-                    <div id="qualityBadge" class="quality-box">
-                        <span style="color:var(--text-secondary);"><i class="fas fa-hourglass-start"></i> Waiting for
-                            Analysis...</span>
+                    <div id="consoleOutput" class="execution-lab">
+                        <div class="log-entry">Waiting for input...</div>
                     </div>
                 </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-panel">
+
+                <!-- Prompt Engineering (Top) -->
+
+
+
 
                 <!-- Jira Validation -->
                 <div class="card">
@@ -179,7 +250,17 @@
                     </div>
                 </div>
 
-
+                <!-- NEW: Jira Quality Analysis (Moved here) -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Jira Quality Analysis</span>
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div id="qualityBadge" class="quality-box">
+                        <span style="color:var(--text-secondary);"><i class="fas fa-hourglass-start"></i> Waiting for
+                            Analysis...</span>
+                    </div>
+                </div>
 
                 <!-- Report Preview -->
                 <div class="card">
@@ -237,7 +318,13 @@
         </div>
     </main>
 
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=6"></script>
+    <!-- Global Loading Spinner -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
 </body>
 
 </html>

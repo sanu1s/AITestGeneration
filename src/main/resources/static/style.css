@@ -106,10 +106,15 @@ body {
     color: var(--text-secondary);
     transition: var(--transition-fast);
     font-weight: 500;
-    display: flex;
     align-items: center;
     gap: 12px;
 }
+
+.nav-links li.has-children {
+    display: block;
+    /* Allow vertical stacking of wrapper and sub-menu */
+}
+
 
 .nav-links li:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -121,6 +126,77 @@ body {
     color: var(--accent-blue);
     border-left: 3px solid var(--accent-blue);
 }
+
+/* Sub-nav Styling */
+.sub-nav-links {
+    list-style: none;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+.sub-nav-links li {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    border-left: none;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border-radius: var(--btn-radius);
+    transition: all 0.2s ease;
+    /* display: flex; REMOVED to allow vertical stacking of nested lists */
+    /* align-items: center;  REMOVED */
+    /* gap: 10px; REMOVED */
+    display: block;
+    /* Stack wrapper and nested UL vertically */
+}
+
+
+.sub-nav-links li:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sub-nav-links li.active {
+    color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.1);
+    border-left: 3px solid var(--accent-cyan);
+}
+
+/* Third-level nested navigation - Enhanced Hierarchy */
+.nested-nav {
+    list-style: none;
+    padding-left: 25px;
+    /* Increased from 15px */
+    margin-top: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    /* Slightly brighter border */
+    margin-left: 8px;
+    /* Increased margin */
+}
+
+/* Specific styling for 3rd level items */
+.nested-nav li {
+    font-size: 0.85rem;
+    /* Smaller font for hierarchy */
+    padding: 6px 10px;
+    /* Tighter padding */
+    color: var(--text-secondary);
+}
+
+.nested-nav li i {
+    font-size: 0.8rem;
+    /* Smaller icons */
+    opacity: 0.8;
+}
+
+.nav-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
 
 /* Main Content */
 .main-content {
@@ -447,6 +523,81 @@ select.prompt-editor-input {
     transition: filter 0.3s, transform 0.5s;
 }
 
+/* Holographic Brain Styles */
+.hologram-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hologram {
+    display: block;
+    /* Ensure visibility */
+    width: 80%;
+    /* Adjust size as needed */
+    max-width: 400px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px var(--accent-cyan));
+    animation: hologramPulse 4s infinite ease-in-out, float 6s infinite ease-in-out;
+    opacity: 0.9;
+}
+
+/* Hologram Scanning Effect (Optional Ring or Overlay) */
+.hologram-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    border: 1px solid rgba(6, 182, 212, 0.1);
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
+    animation: spinReverse 20s linear infinite;
+    z-index: -1;
+    /* Behind the brain */
+}
+
+@keyframes hologramPulse {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 15px var(--accent-cyan)) brightness(1);
+        opacity: 0.9;
+    }
+
+    50% {
+        filter: drop-shadow(0 0 30px var(--accent-cyan)) brightness(1.2);
+        opacity: 1;
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes spinReverse {
+    from {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+
+    to {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+}
+
 /* Thinking Pulse Animation - Subtle Zoom/Glow */
 .thinking-mode .brain-img {
     animation: brainWebPulse 4s infinite ease-in-out;
@@ -651,6 +802,64 @@ select.prompt-editor-input {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 14, 20, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(6, 182, 212, 0.3);
+    border-top: 4px solid var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
+.loading-text {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
