@@ -13,6 +13,11 @@ public class TestContext {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
         context = browser.newContext();
+        
+        // Set default timeout to 60 seconds (60000 ms)
+        context.setDefaultTimeout(30000); 
+        context.setDefaultNavigationTimeout(30000);
+
         page = context.newPage();
     }
 }
