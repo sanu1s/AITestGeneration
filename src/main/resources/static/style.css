@@ -60,7 +60,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 260px;
+    width: 280px;
     background: rgba(11, 14, 20, 0.95);
     border-right: var(--glass-border);
     display: flex;
@@ -173,8 +173,8 @@ body {
 }
 
 .logo img {
-    width: 32px;
-    height: 32px;
+    width: 100px;
+    height: 100px;
 }
 
 .nav-links {
