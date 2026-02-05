@@ -670,20 +670,163 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Bind PMO Tabs (Sharing same views for now)
-    if (tabJiraLensPMO) {
-        tabJiraLensPMO.addEventListener('click', (e) => {
-            e.stopPropagation();
-            switchToJiraScanner();
+    // JIRA Creator Logic
+    const tabJiraCreator = document.getElementById('tab-jira-creator');
+    const viewJiraCreator = document.getElementById('view-jira-creator');
+    const createJiraBtn = document.getElementById('createJiraBtn');
+
+    function hideAllViews() {
+        if(viewJira) viewJira.style.display = 'none';
+        if(viewTranscript) viewTranscript.style.display = 'none';
+        if(viewJiraCreator) viewJiraCreator.style.display = 'none';
+    }
+
+    function switchToJiraCreator() {
+        hideAllViews();
+        if(viewJiraCreator) viewJiraCreator.style.display = 'flex';
+        log("Switched to JIRA Creator");
+    }
+
+    // Overwrite previous switch functions to respect all views
+    window.switchToJiraScanner = function() {
+        hideAllViews();
+        if(viewJira) viewJira.style.display = 'flex';
+        log("Switched to JIRA Scanner");
+    }
+
+    window.switchToTranscriptUpload = function() {
+        hideAllViews();
+        if(viewTranscript) viewTranscript.style.display = 'flex';
+        log("Switched to Transcript Upload");
+    }
+    
+    // Check if we need to re-bind original tabs to new functions? 
+    // Just redefining the global functions might not work if listeners bind to old references.
+    // Let's re-bind listeners for safety or ensure functions are called fresh.
+    // Actually the listeners above call `switchToJiraScanner()` which will use the hoisted value if defined, 
+    // but since they were defined as const/function earlier in this scope...
+    // To be safe, let's just make the listeners call these new logical blocks.
+    
+    if (tabJiraCreator) {
+        tabJiraCreator.addEventListener('click', (e) => {
+             e.stopPropagation();
+             switchToJiraCreator();
         });
     }
 
-    if (tabTranscriptPMO) {
-        tabTranscriptPMO.addEventListener('click', (e) => {
-            e.stopPropagation();
-            switchToTranscriptUpload();
+    if (createJiraBtn) {
+        createJiraBtn.addEventListener('click', async () => {
+             const requirements = document.getElementById('jiraInfoInput').value.trim();
+             const issueType = document.getElementById('jiraIssueType').value;
+             
+             if (!requirements) {
+                 alert("Please enter requirements.");
+                 return;
+             }
+             
+             showSpinner("Analyzing & Creating JIRA...");
+             setThinkingState(true);
+             
+             try {
+                 const response = await fetch('/api/pdm/create-jira-text', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ requirements, type: issueType })
+                 });
+                 
+                 hideSpinner();
+                 setThinkingState(false);
+                 
+                 if (response.ok) {
+                     const data = await response.json(); // PdmUploadResult { items: [] } -> wait, PdmUploadResult has 'issues'
+                     log(`Created ${data.issues.length} JIRA Issue(s)`, 'success');
+                     
+                     let msg = "Created Issues:\n";
+                     data.issues.forEach(i => {
+                         msg += `${i.key}: ${i.summary} (${i.url})\n`;
+                         log(`Created: <a href="${i.url}" target="_blank">${i.key}</a> - ${i.summary}`);
+                     });
+                     
+                     // Helper for basic alert
+                     setTimeout(() => alert(msg), 100);
+                     
+                     // Clear input
+                     document.getElementById('jiraInfoInput').value = "";
+                 } else {
+                     const err = await response.text();
+                     log("Failed to create JIRA: " + err, 'error');
+                 }
+             } catch(e) {
+                 hideSpinner();
+                 setThinkingState(false);
+                 log("Error: " + e.message, 'error');
+             }
         });
     }
+
+    // Bind PMO Tabs (Sharing same views for now)
+    // Settings Modal Logic
+    const settingsModal = document.getElementById('settingsModal');
+    const tabSettings = document.getElementById('tab-settings');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    
+    function openSettings() {
+        if(settingsModal) settingsModal.style.display = 'flex';
+    }
+    
+    function closeSettings() {
+        if(settingsModal) settingsModal.style.display = 'none';
+    }
+    
+    if(tabSettings) {
+        tabSettings.addEventListener('click', (e) => {
+            e.stopPropagation(); // Avoid other sidebar clicks
+            openSettings();
+        });
+    }
+    
+    if(closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+    if(cancelSettingsBtn) cancelSettingsBtn.addEventListener('click', closeSettings);
+    
+    if(saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            const geminiKey = document.getElementById('cfg-gemini-key').value.trim();
+            const githubUser = document.getElementById('cfg-github-user').value.trim();
+            const githubToken = document.getElementById('cfg-github-token').value.trim();
+            const vectorToken = document.getElementById('cfg-vector-token').value.trim();
+            
+            showSpinner("Saving Configuration...");
+            
+            try {
+                const response = await fetch('/update-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        geminiKey,
+                        githubUser,
+                        githubToken,
+                        vectorToken
+                    })
+                });
+                
+                hideSpinner();
+                
+                if(response.ok) {
+                    log("Detailed configuration saved successfully.", "success");
+                    closeSettings();
+                } else {
+                    const err = await response.text();
+                    log("Failed to save configuration: " + err, "error");
+                }
+            } catch(e) {
+                hideSpinner();
+                log("Error saving config: " + e.message, "error");
+            }
+        });
+    }
+
 
 
 

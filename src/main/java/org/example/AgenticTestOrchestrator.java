@@ -53,7 +53,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+// import java.util.stream.Stream; // Removed unused
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,7 +61,7 @@ import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import java.io.FileOutputStream;
+// import java.io.FileOutputStream; // Removed unused
 
 import static io.qdrant.client.PointIdFactory.id;
 import static io.qdrant.client.ValueFactory.value;
@@ -77,6 +77,18 @@ public class AgenticTestOrchestrator {
 
     // Job Status Management
     private static final Map<String, JobStatus> jobs = new ConcurrentHashMap<>();
+    // Dynamic Configuration
+    private static final Map<String, String> dynamicConfig = new ConcurrentHashMap<>();
+    
+    // Helper to get config (Dynamic > Env > System Prop)
+    private static String getConfig(String key) {
+        if (dynamicConfig.containsKey(key) && !dynamicConfig.get(key).isEmpty()) {
+            return dynamicConfig.get(key);
+        }
+        String env = System.getenv(key);
+        if (env != null && !env.isEmpty()) return env;
+        return "";
+    }
     
     // Records for data exchange
     record JobStatus(String status, String message, String prUrl, String reportUrl, String acceptanceCriteria, String jiraQuality) {}
@@ -92,11 +104,11 @@ public class AgenticTestOrchestrator {
 
     private static final String JIRA_URL = "https://techsavy.atlassian.net";
     private static final String JIRA_USER = "arjunkrishnansuresh@gmail.com";
-    private static final String JIRA_TOKEN = System.getenv("JIRA_TOKEN");
+    // private static final String JIRA_TOKEN = System.getenv("JIRA_TOKEN"); // Removed to use dynamic lookup
 
     private static final String GITHUB_REPO_URL = "https://github.com/sanu1s/AITestGeneration.git";
-    private static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN");
-    private static final String GITHUB_USER = System.getenv("GITHUB_USER");
+    // private static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN"); // Removed
+    // private static final String GITHUB_USER = System.getenv("GITHUB_USER");   // Removed
     
     // Define AI Service for Use Case generation
     interface UseCaseAssistant {
@@ -347,7 +359,7 @@ public class AgenticTestOrchestrator {
             CompletableFuture.runAsync(() -> {
                 try {
                     // Create minimal Assistant just for Quality Check (Gemini setup duplicate but fine)
-                     String geminiApiKey = System.getenv("GEMINI_API_KEY");
+                     String geminiApiKey = getConfig("GEMINI_API_KEY");
                      ChatModel model = GoogleAiGeminiChatModel.builder()
                         .apiKey(geminiApiKey)
                         .modelName("gemini-2.5-flash")
@@ -410,7 +422,7 @@ public class AgenticTestOrchestrator {
                 // Simple check if it's PDF, we might need PDFBox, but for now assuming Text/Markdown/JSON
                 
                 // Initialize AI
-                String geminiApiKey = System.getenv("GEMINI_API_KEY");
+                String geminiApiKey = getConfig("GEMINI_API_KEY");
                 ChatModel model = GoogleAiGeminiChatModel.builder()
                         .apiKey(geminiApiKey)
                         .modelName("gemini-2.5-flash")
@@ -437,6 +449,77 @@ public class AgenticTestOrchestrator {
             } catch (Exception e) {
                 e.printStackTrace();
                 ctx.status(500).result("Error processing requirements: " + e.getMessage());
+            }
+        });
+
+        // ElitePDM: Create JIRA from Text
+        app.post("/api/pdm/create-jira-text", ctx -> {
+            try {
+                Map<String, String> payload = ctx.bodyAsClass(Map.class);
+                String requirements = payload.get("requirements");
+                String requestedType = payload.get("type"); // Story, Task, etc.
+                
+                if (requirements == null || requirements.trim().isEmpty()) {
+                    ctx.status(400).result("Requirements text cannot be empty.");
+                    return;
+                }
+
+                // Initialize AI
+                String geminiApiKey = getConfig("GEMINI_API_KEY");
+                ChatModel model = GoogleAiGeminiChatModel.builder()
+                        .apiKey(geminiApiKey)
+                        .modelName("gemini-2.5-flash")
+                        .temperature(0.3) 
+                        .timeout(java.time.Duration.ofSeconds(90))
+                        .build();
+                UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
+
+                // Analyze & Parse
+                // We reuse the parsing logic. The prompt handles list extraction.
+                // If user wants a specific Type, we might override what AI suggests or pass it in prompt.
+                // For now, let's trust the AI parsing, or force the requested type if single item.
+                
+                RequirementParseResult result = assistant.parseRequirements("Analyze this requirement and create a detailed work item structures:\n" + requirements);
+                
+                List<CreatedIssue> createdIssues = new ArrayList<>();
+                if (result.items() != null) {
+                    for (WorkItem item : result.items()) {
+                         // Use requested type if valid, else use AI detected type
+                         String finalType = (requestedType != null && !requestedType.isEmpty()) ? requestedType : item.type();
+                         
+                         // Create Issue
+                         CreatedIssue issue = createJiraIssue(item.summary(), item.description() + "\n\n*Acceptance Criteria:*\n" + item.acceptanceCriteria(), finalType);
+                         createdIssues.add(issue);
+                    }
+                }
+
+                ctx.json(new PdmUploadResult(createdIssues));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error creating JIRA: " + e.getMessage());
+            }
+        });
+        
+        // Settings/Config Update
+        app.post("/update-config", ctx -> {
+            try {
+                Map<String, String> payload = ctx.bodyAsClass(Map.class);
+                String geminiKey = payload.get("geminiKey");
+                String githubUser = payload.get("githubUser");
+                String githubToken = payload.get("githubToken");
+                String vectorToken = payload.get("vectorToken");
+                
+                if (geminiKey != null) dynamicConfig.put("GEMINI_API_KEY", geminiKey);
+                if (githubUser != null) dynamicConfig.put("GITHUB_USER", githubUser);
+                if (githubToken != null) dynamicConfig.put("GITHUB_TOKEN", githubToken);
+                if (vectorToken != null) dynamicConfig.put("VECTOR_TOKEN", vectorToken);
+                
+                System.out.println("Configuration updated dynamically.");
+                ctx.status(200).result("Configuration updated.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error updating config: " + e.getMessage());
             }
         });
     }
@@ -483,13 +566,13 @@ public class AgenticTestOrchestrator {
         conf.set("fs.viewfs.impl", "org.apache.hadoop.fs.viewfs.ViewFileSystem");
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
 
-        String gitHubToken = GITHUB_TOKEN;
+        String gitHubToken = getConfig("GITHUB_TOKEN");
         if (gitHubToken == null || gitHubToken.trim().isEmpty()) {
             System.out.println("WARNING: GITHUB_TOKEN is not valid. Git push might fail.");
         }
 
-        String geminiApiKey = System.getenv("GEMINI_API_KEY");
-        String githubUser = GITHUB_USER;
+        String geminiApiKey = getConfig("GEMINI_API_KEY");
+        String githubUser = getConfig("GITHUB_USER");
 
         if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
              System.err.println("CRITICAL: GEMINI_API_KEY is missing!");
@@ -659,7 +742,7 @@ public class AgenticTestOrchestrator {
         {
             // 1. Connect to Jira
             try (JiraRestClient jiraClient = new AsynchronousJiraRestClientFactory()
-                    .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN)) {
+                    .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, getConfig("JIRA_TOKEN"))) {
                 // 2. Fetch the specific issue
                 String issueKey = "KAN-1";
                 Issue issue = jiraClient.getIssueClient().getIssue(issueKey).claim();
@@ -693,7 +776,7 @@ public class AgenticTestOrchestrator {
         StringBuilder requirementsBuilder = new StringBuilder();
 
         try (JiraRestClient jiraClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN)) {
+                .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, getConfig("JIRA_TOKEN"))) {
             System.out.println("Jira client created");        
             boolean hasMoreResults = true;
 
@@ -1072,7 +1155,7 @@ public class AgenticTestOrchestrator {
     private static CreatedIssue createJiraIssue(String summary, String description, String type) {
         try {
             JiraRestClient restClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, JIRA_TOKEN);
+                .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, getConfig("JIRA_TOKEN"));
 
             // 10001 = Story, 10002 = Task (Standard IDs, might vary)
             // Ideally we fetch IssueType ID by name, but hardcoding for MVP or defaulting to Story
@@ -1136,7 +1219,7 @@ public class AgenticTestOrchestrator {
             // Push
             // Assuming origin exists. Use UsernamePasswordCredentialsProvider with GITHUB_TOKEN
              git.push()
-                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(GITHUB_USER, GITHUB_TOKEN))
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(getConfig("GITHUB_USER"), getConfig("GITHUB_TOKEN")))
                 .call();
                 
              String repoUrl = GITHUB_REPO_URL.replace(".git", "");
