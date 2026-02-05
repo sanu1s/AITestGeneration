@@ -21,52 +21,40 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User enters an ineligible order number {string}")
-public void userEntersIneligibleOrderNumber(String orderNo) {
-    System.out.println("Typing ineligible order number: " + orderNo);
-    page.locator("#order_no").fill(orderNo);
-}
-
-@When("User enters a valid order number {string}")
-public void userEntersValidOrderNumber(String orderNo) {
-    System.out.println("Typing valid order number: " + orderNo);
-    page.locator("#order_no").fill(orderNo);
+@When("User clicks the {string} button")
+public void clickTrackOrderButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 @When("User leaves the order number field empty")
-public void userLeavesOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty");
+public void leaveOrderNumberFieldEmpty() {
+    System.out.println("Leaving order number field empty.");
     page.locator("#order_no").fill("");
 }
 
-@Then("The status message should display {string}")
-public void theStatusMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying status message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Given("User is on the order tracking page {string}")
+public void navigateToTrackingPage(String url) {
+    System.out.println("Navigating to: " + url);
+    page.navigate(url);
 }
 
-@When("User enters an invalid order number {string}")
-public void userEntersInvalidOrderNumber(String orderNo) {
-    System.out.println("Typing invalid order number: " + orderNo);
+@When("User enters order number {string}")
+public void enterOrderNumber(String orderNo) {
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Given("User is on the \"Price Adjustment Request\" page")
-public void userIsOnPriceAdjustmentRequestPage() {
-    System.out.println("Navigating to Price Adjustment Request page");
-    page.navigate("https://example.com/price-adjustment");
-}
-
-@When("User clicks the \"Check Eligibility\" button")
-public void userClicksCheckEligibilityButton() {
-    System.out.println("Clicking Check Eligibility button");
-    page.locator("button:has-text('Track Order')").click();
-}
-
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying error message: " + expectedMessage);
-    assertThat(page.locator(".error")).containsText(expectedMessage);
+public void verifyErrorMessage(String expectedError) {
+    System.out.println("Verifying error message: " + expectedError);
+    assertThat(page.locator(".result")).containsText(expectedError);
+}
+
+@Then("The order status should display {string}")
+public void verifyOrderStatus(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 }
