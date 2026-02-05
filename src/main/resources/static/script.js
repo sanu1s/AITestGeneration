@@ -214,8 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const overlayText = overlay ? overlay.querySelector('.loading-text') : null;
         if (overlay && overlayText) {
             overlayText.textContent = text;
-            overlay.style.display = 'flex';
-            console.log("Spinner overlay set to flex");
+            // overlay.style.display = 'flex'; // DISABLED per user request
+            console.log("Spinner overlay set to flex (SUPPRESSED)");
         } else {
             console.error("Spinner overlay or text element not found!");
         }
