@@ -27,45 +27,27 @@ public void userClicksTheButton(String buttonText) {
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@When("User clicks the \"Track Order\" button")
-public void clickTrackOrderButton() {
-    System.out.println("Executing: User clicks the 'Track Order' button");
-    page.locator("button:has-text('Track Order')").click();
-}
-
 @Given("User is on the order tracking page")
 public void userIsOnOrderTrackingPage() {
     System.out.println("Navigating to order tracking page");
-    page.navigate("http://localhost:8080/order-tracking");
-}
-
-@When("User leaves the order number field empty")
-public void leaveOrderNumberEmpty() {
-    System.out.println("Executing: User leaves the order number field empty");
-    page.locator("#order_no").fill("");
-}
-
-@Then("The status message should display {string}")
-public void theStatusMessageShouldDisplay(String message) {
-    System.out.println("Verifying status message: " + message);
-    assertThat(page.locator(".result")).containsText(message);
+    page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String message) {
-    System.out.println("Verifying error message: " + message);
-    assertThat(page.locator(".error")).containsText(message);
+public void theErrorMessageShouldDisplay(String expectedError) {
+    System.out.println("Verifying error message: " + expectedError);
+    assertThat(page.locator(".result")).containsText(expectedError);
 }
 
 @Then("The order status should display {string}")
-public void verifyOrderStatus(String expectedStatus) {
-    System.out.println("Executing: The order status should display " + expectedStatus);
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
     assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
