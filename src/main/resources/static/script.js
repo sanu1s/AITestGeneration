@@ -157,7 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
                              // Enable Generate Button
                              runBtn.disabled = false;
                              fetchBtn.disabled = false;
-                             fetchBtn.textContent = 'Pull Requirements';
+                             fetchBtn.disabled = false;
+                             fetchBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Pull Requirements';
                              log("Requirements fetched. You can now generate test cases.");
                              setThinkingState(false);
                              return; // Validation stop here for fetch
@@ -194,7 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         log(statusData.message, 'error');
                         revertUIState();
                         fetchBtn.disabled = false;
-                        fetchBtn.textContent = 'Pull Requirements';
+                        fetchBtn.textContent = 'Pull Requirements'; // Or innerHTML if you want icon back on error
+                        fetchBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Pull Requirements';
                         const runUploadBtn = document.getElementById('runUploadBtn');
                         if (runUploadBtn) runUploadBtn.disabled = false;
                     }
@@ -241,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // UI Reset
         fetchBtn.disabled = true;
+        fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pulling...';
         
         log(`Fetching requirements for Epic: ${epicKey}...`);
         
@@ -724,6 +727,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  return;
              }
              
+             // Disable button and show loading state
+             createJiraBtn.disabled = true;
+             const originalBtnText = createJiraBtn.innerHTML;
+             createJiraBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
              showSpinner("Analyzing & Creating JIRA...");
              setThinkingState(true);
              
@@ -760,6 +768,10 @@ document.addEventListener('DOMContentLoaded', () => {
                  hideSpinner();
                  setThinkingState(false);
                  log("Error: " + e.message, 'error');
+             } finally {
+                 // Re-enable button
+                 createJiraBtn.disabled = false;
+                 createJiraBtn.innerHTML = originalBtnText;
              }
         });
     }
