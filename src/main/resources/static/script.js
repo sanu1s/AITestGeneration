@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (isFetchOnly) {
                              // Enable Generate Button
                              runBtn.disabled = false;
+                             runBtn.innerHTML = '<i class="fas fa-play"></i> Generate Test Cases';
                              fetchBtn.disabled = false;
                              fetchBtn.disabled = false;
                              fetchBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Pull Requirements';
@@ -178,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         runBtn.disabled = false;
-                        runBtn.textContent = 'Generate Test Cases';
+                        runBtn.innerHTML = '<i class="fas fa-play"></i> Generate Test Cases';
                         fetchBtn.disabled = false;
                         
 
@@ -300,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // UI Reset
         runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
         fetchBtn.disabled = true; // Disable fetch while generating
         
         log(`Starting test generation for Epic: ${epicKey}...`);
@@ -537,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const executionStatusIndicator = document.getElementById('executionStatusIndicator');
 
         runBtn.disabled = false;
-        runBtn.textContent = 'Generate Test Cases';
+        runBtn.innerHTML = '<i class="fas fa-play"></i> Generate Test Cases';
         
         executionStatusText.textContent = "Failed";
         executionStatusText.style.color = "#ff5252";
@@ -548,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const runUploadBtn = document.getElementById('runUploadBtn');
         if (runUploadBtn) {
             runUploadBtn.disabled = false;
-            runUploadBtn.textContent = 'Generate from Upload';
+            runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate from Upload';
         }
     }
 

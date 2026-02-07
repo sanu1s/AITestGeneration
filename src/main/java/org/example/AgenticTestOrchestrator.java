@@ -118,14 +118,8 @@ public class AgenticTestOrchestrator {
         @SystemMessage("{{prompt}}")
         TestCasesResponse generate(@V("prompt") String systemPrompt, @UserMessage String transcript);
         
-        @SystemMessage("You are an expert Product Owner. Analyze the uploaded requirements document and extract a list of distinct Work Items (User Stories or Tasks) to be created in JIRA.\n" +
-                      "For each item, provide:\n" +
-                      "- summary: A concise title\n" +
-                      "- description: Detailed description\n" +
-                      "- acceptanceCriteria: A bulleted list of acceptance criteria\n" +
-                      "- type: 'Story' or 'Task'\n" +
-                      "Return the result as a JSON object with a list of items.")
-        RequirementParseResult parseRequirements(@UserMessage String documentContent);
+        @SystemMessage("{{prompt}}")
+        RequirementParseResult parseRequirements(@V("prompt") String systemPrompt, @UserMessage String documentContent);
     }
 
     @SuppressWarnings("null")
@@ -432,7 +426,9 @@ public class AgenticTestOrchestrator {
                 UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
 
                 // Analyze & Parse
-                RequirementParseResult result = assistant.parseRequirements("Analyze this document:\n" + content);
+                // Load prompt for general file upload parsing
+                String jiraCreationPrompt = loadPrompt("jira_creation_system_prompt.txt");
+                RequirementParseResult result = assistant.parseRequirements(jiraCreationPrompt, "Analyze this document:\n" + content);
                 
                 // Create JIRA Tickets
                 List<CreatedIssue> createdIssues = new ArrayList<>();
@@ -479,7 +475,9 @@ public class AgenticTestOrchestrator {
                 // If user wants a specific Type, we might override what AI suggests or pass it in prompt.
                 // For now, let's trust the AI parsing, or force the requested type if single item.
                 
-                RequirementParseResult result = assistant.parseRequirements("Analyze this requirement and create a detailed work item structures:\n" + requirements);
+                // Load prompt from external file
+                String jiraCreationPrompt = loadPrompt("jira_creation_system_prompt.txt");
+                RequirementParseResult result = assistant.parseRequirements(jiraCreationPrompt, "Analyze this requirement and create a detailed work item structures:\n" + requirements);
                 
                 List<CreatedIssue> createdIssues = new ArrayList<>();
                 if (result.items() != null) {
