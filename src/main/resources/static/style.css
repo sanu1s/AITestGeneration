@@ -450,8 +450,34 @@ body {
     background: rgba(255, 255, 255, 0.05);
     /* Ghosted */
     color: var(--text-secondary);
-    cursor: not-allowed;
     box-shadow: none;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 24px;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #7b1fa2, #4a0072);
+}
+
+.btn-purple:hover:not(:disabled) {
+    box-shadow: 0 4px 25px rgba(123, 31, 162, 0.5);
 }
 
 /* Prompt Editor Specifics */
@@ -556,7 +582,7 @@ select.prompt-editor-input {
 
 /* Discovery Graph / Brain */
 .discovery-graph {
-    min-height: 350px;
+    min-height: 250px;
     /* Increased height */
     height: 100%;
     display: flex;
@@ -595,7 +621,7 @@ select.prompt-editor-input {
 
 .brain-img {
     width: 48%;
-    max-width: 280px;
+    max-width: 180px;
     height: auto;
     max-height: 90%;
     object-fit: contain;
@@ -622,7 +648,7 @@ select.prompt-editor-input {
     /* Ensure visibility */
     width: 80%;
     /* Adjust size as needed */
-    max-width: 400px;
+    max-width: 250px;
     height: auto;
     object-fit: contain;
     filter: drop-shadow(0 0 15px var(--accent-cyan));

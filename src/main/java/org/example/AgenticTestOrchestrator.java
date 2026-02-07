@@ -738,34 +738,7 @@ public class AgenticTestOrchestrator {
         return testCases;
     }
 
-    private static void ReadDataFromJIRADashBoard(UseCaseAssistant assistant) throws Exception {
-        {
-            // 1. Connect to Jira
-            try (JiraRestClient jiraClient = new AsynchronousJiraRestClientFactory()
-                    .createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_USER, getConfig("JIRA_TOKEN"))) {
-                // 2. Fetch the specific issue
-                String issueKey = "KAN-1";
-                Issue issue = jiraClient.getIssueClient().getIssue(issueKey).claim();
-               
-                // 3. Check if status is "Ready for QA"
-                String currentStatus = issue.getStatus().getName();
-                System.out.println("Issue " + issueKey + " is currently: " + currentStatus);
-
-                if ("In Progress".equalsIgnoreCase(currentStatus)) {
-                    System.out.println("Condition met. Reading requirements for Gemini analysis...");
-
-                    String requirementsData = String.format("Summary: %s\nDescription: %s",
-                            issue.getSummary(), issue.getDescription());
-                    System.out.println("Requirements Data: " + requirementsData);
-                    insertIntoVectorDB(requirementsData);
-                    // 4. Send to Gemini for QA analysis
-                    analyzeWithGeminiAI(requirementsData, assistant, issueKey);
-                } else {
-                    System.out.println("Skipping: Issue is not in 'Ready for QA' status.");
-                }
-            }
-        }
-    }
+   
     private static JiraFetchResult ReadDataFromJIRADashBoardDetails(UseCaseAssistant assistant, String issueKeyInput, boolean generateTests) throws Exception {
         System.out.println("Reading data from JIRA for key: " + issueKeyInput + ". Generate Tests: " + generateTests);
         final String JQL_QUERY = "key = '" + issueKeyInput + "' OR parent = '" + issueKeyInput + "'";
