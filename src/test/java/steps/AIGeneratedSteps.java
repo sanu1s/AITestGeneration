@@ -24,25 +24,13 @@ public class AIGeneratedSteps {
 @Given("I am on the order tracking page")
 public void navigateToOrderTrackingPage() {
     System.out.println("Navigating to order tracking page");
-    page.navigate("http://localhost:8080/trackorder"); // Assuming a base URL for tracking
-}
-
-@When("I leave the order number field empty")
-public void leaveOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty");
-    page.locator("#order_no").fill("");
+    page.navigate("http://localhost:8080/track-order"); // Assuming a URL for tracking
 }
 
 @When("I click the {string} button")
 public void clickTrackOrderButton(String buttonText) {
     System.out.println("Clicking button: " + buttonText);
     page.locator("button:has-text('" + buttonText + "')").click();
-}
-
-@Then("the error message should display {string}")
-public void verifyErrorMessage(String expectedErrorMessage) {
-    System.out.println("Verifying error message: " + expectedErrorMessage);
-    assertThat(page.locator(".result")).containsText(expectedErrorMessage);
 }
 
 @When("I enter order number {string}")
@@ -55,6 +43,12 @@ public void enterOrderNumber(String orderNo) {
 public void verifyOrderStatus(String expectedStatus) {
     System.out.println("Verifying order status: " + expectedStatus);
     assertThat(page.locator(".result")).containsText(expectedStatus);
+}
+
+@Then("the result message should display {string}")
+public void verifyErrorMessage(String expectedMessage) {
+    System.out.println("Verifying error message: " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
