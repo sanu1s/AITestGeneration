@@ -1093,3 +1093,45 @@ select.prompt-editor-input {
     box-shadow: 0 4px 25px rgba(16, 185, 129, 0.5);
     filter: brightness(1.1);
 }
+
+/* Created JIRA Issues Panel */
+.created-issues-content {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.created-issues-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.created-issues-content li {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+    border-radius: 4px;
+}
+
+.created-issues-content li:last-child {
+    border-bottom: none;
+}
+
+.created-issues-content li:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.created-issues-content a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+}
+
+.created-issues-content a:hover {
+    color: #fff;
+    text-decoration: underline;
+}

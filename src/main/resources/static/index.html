@@ -42,7 +42,7 @@
                         </div>
                         <ul class="nested-nav" style="display: none;">
                             <li id="tab-jira-lens"><i class="fas fa-search"></i> JIRA Scanner</li>
-                            <li id="tab-transcript-upload"><i class="fas fa-file-upload"></i> Transcript Uploads</li>
+                            <li id="tab-transcript-upload"><i class="fas fa-file-upload"></i> Discovery Mode</li>
                         </ul>
                     </li>
 
@@ -109,7 +109,6 @@
                             </div>
                             <div class="brain-status-text">
                                 <h3 id="brainLabel">Quality Assurance Specialist</h3>
-                                <p id="brainStatus">At your service</p>
                             </div>
                         </div>
                     </div>
@@ -158,7 +157,7 @@
                 <!-- Transcript Upload View (Hidden by Default) -->
                 <div class="card" id="view-transcript-upload" style="display: none;">
                     <div class="card-header">
-                        <span>Transcript Upload</span>
+                        <span>Discovery Mode</span>
                         <i class="fas fa-file-upload"></i>
                     </div>
                     <div class="activity-feed-container">
@@ -268,16 +267,34 @@
                         <div id="executionStatusIndicator" class="status-indicator"></div>
                     </div>
 
-                    <!-- Acceptance Criteria Section -->
+                    <!-- Acceptance Criteria / Use Case Extract -->
                     <div class="ac-section">
-                        <h4>Acceptance Criteria</h4>
-                        <div id="acceptanceCriteriaContainer" class="ac-content">
-                            Waiting for requirements...
+                        <h4>Analyzed Use Cases (Editable)</h4>
+                        <div id="acceptanceCriteriaContainer" class="ac-content" contenteditable="true"
+                            style="border: 1px dashed var(--glass-border); padding: 10px; min-height: 100px; background: rgba(0,0,0,0.2);">
+                            Waiting for upload...
+                        </div>
+                        <div style="margin-top: 10px; text-align: right;">
+                            <button id="createTestEffortsBtn" class="btn-primary" style="display:none;">
+                                <i class="fas fa-magic"></i> Create JIRA
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- NEW: Jira Quality Analysis (Moved here) -->
+                <!-- Created Issues List (Initially empty) -->
+                <div id="createdIssuesPanel" class="card">
+                    <div class="card-header">
+                        <span>Created JIRA Issues</span>
+                        <i class="fas fa-list-ul"></i>
+                    </div>
+                    <div id="createdIssuesList" class="created-issues-content"
+                        style="max-height: 200px; overflow-y: auto;">
+                        <!-- List goes here -->
+                    </div>
+                </div>
+
+                <!-- Jira Quality Analysis -->
                 <div class="card">
                     <div class="card-header">
                         <span>Jira Quality Analysis</span>
@@ -345,7 +362,7 @@
         </div>
     </main>
 
-    <script src="script.js?v=6"></script>
+    <script src="script.js?v=11"></script>
     <!-- Global Loading Spinner -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="spinner"></div>

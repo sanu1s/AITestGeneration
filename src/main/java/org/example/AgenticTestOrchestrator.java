@@ -91,8 +91,8 @@ public class AgenticTestOrchestrator {
     }
     
     // Records for data exchange
-    record JobStatus(String status, String message, String prUrl, String reportUrl, String acceptanceCriteria, String jiraQuality) {}
-    record PipelineResult(String prUrl, String acceptanceCriteria, String jiraQuality) {}
+    record JobStatus(String status, String message, String prUrl, String reportUrl, String acceptanceCriteria, String jiraQuality, String createdIssuesHtml) {}
+    record PipelineResult(String prUrl, String acceptanceCriteria, String jiraQuality, String createdIssuesHtml) {}
     record JiraFetchResult(List<PlaywrightTestCase> testCases, String requirements) {}
     record JiraQualityResult(String score, String reasoning) {}
     
@@ -101,6 +101,11 @@ public class AgenticTestOrchestrator {
     record RequirementParseResult(List<WorkItem> items) {}
     record CreatedIssue(String key, String summary, String url) {}
     record PdmUploadResult(List<CreatedIssue> issues) {}
+    
+    // New Records for Two-Stage Workflow
+    record UseCaseExtractionResult(String requirementsText) {}
+    record TestEffort(String summary, String description) {}
+    record TestEffortResponse(List<TestEffort> testEfforts) {}
 
     private static final String JIRA_URL = "https://techsavy.atlassian.net";
     private static final String JIRA_USER = "arjunkrishnansuresh@gmail.com";
@@ -120,6 +125,13 @@ public class AgenticTestOrchestrator {
         
         @SystemMessage("{{prompt}}")
         RequirementParseResult parseRequirements(@V("prompt") String systemPrompt, @UserMessage String documentContent);
+
+        // New Methods for Two-Stage Workflow
+        @SystemMessage("{{prompt}}")
+        String extractUseCases(@V("prompt") String systemPrompt, @UserMessage String transcript);
+
+        @SystemMessage("{{prompt}}")
+        TestEffortResponse generateTestEfforts(@V("prompt") String systemPrompt, @UserMessage String requirements);
     }
 
     @SuppressWarnings("null")
@@ -238,16 +250,16 @@ public class AgenticTestOrchestrator {
             }
 
             String jobId = UUID.randomUUID().toString();
-            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Starting pipeline...", null, null, null, null));
+            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Starting pipeline...", null, null, null, null, null));
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    jobs.put(jobId, new JobStatus("IN_PROGRESS", "Executing pipeline...", null, null, null, null));
+                    jobs.put(jobId, new JobStatus("IN_PROGRESS", "Executing pipeline...", null, null, null, null, null));
                     PipelineResult result = executePipeline(finalEpicKey, finalTranscriptPath, finalTargetColumn);
-                    jobs.put(jobId, new JobStatus("COMPLETED", "Pipeline finished successfully.", result.prUrl(), "/report/index.html", result.acceptanceCriteria(), result.jiraQuality()));
+                    jobs.put(jobId, new JobStatus("COMPLETED", "Pipeline finished successfully.", result.prUrl(), "/report/index.html", result.acceptanceCriteria(), result.jiraQuality(), result.createdIssuesHtml()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null));
+                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null, null));
                 }
             });
 
@@ -348,7 +360,7 @@ public class AgenticTestOrchestrator {
             }
 
             String jobId = UUID.randomUUID().toString();
-            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Fetching requirements...", null, null, null, null));
+            jobs.put(jobId, new JobStatus("IN_PROGRESS", "Fetching requirements...", null, null, null, null, null));
 
             CompletableFuture.runAsync(() -> {
                 try {
@@ -390,11 +402,11 @@ public class AgenticTestOrchestrator {
                          );
                     }
                     
-                    jobs.put(jobId, new JobStatus("COMPLETED", "Requirements fetched.", null, null, requirements, qualityHtml));
+                    jobs.put(jobId, new JobStatus("COMPLETED", "Requirements fetched.", null, null, requirements, qualityHtml, null));
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null));
+                    jobs.put(jobId, new JobStatus("FAILED", "Error: " + e.getMessage(), null, null, null, null, null));
                 }
             });
             
@@ -498,8 +510,110 @@ public class AgenticTestOrchestrator {
                 ctx.status(500).result("Error creating JIRA: " + e.getMessage());
             }
         });
-        
-        // Settings/Config Update
+
+        // Stage 1: Transcript to Requirements (Use Cases)
+        app.post("/api/pdm/transcript-to-requirements", ctx -> {
+             try {
+                 String transcriptContent = "";
+                 
+                 // Handle File Upload or Text Body
+                 if (ctx.isMultipart()) {
+                     var uploadedFile = ctx.uploadedFile("transcript");
+                     if (uploadedFile != null) {
+                         String filename = uploadedFile.filename();
+                         if (filename.endsWith(".xlsx") || filename.endsWith(".xls")) {
+                             String csvPath = convertExcelToCSV(uploadedFile.content(), filename);
+                             transcriptContent = Files.readString(Paths.get(csvPath));
+                         } else {
+                             transcriptContent = new String(uploadedFile.content().readAllBytes());
+                         }
+                     }
+                 } else {
+                     transcriptContent = ctx.body();
+                 }
+
+                 if (transcriptContent.isEmpty()) {
+                     ctx.status(400).result("No transcript content found.");
+                     return;
+                 }
+
+                 // Initialize AI
+                 String geminiApiKey = getConfig("GEMINI_API_KEY");
+                 ChatModel model = GoogleAiGeminiChatModel.builder()
+                        .apiKey(geminiApiKey)
+                        .modelName("gemini-2.5-flash")
+                        .temperature(0.3)
+                        .timeout(java.time.Duration.ofSeconds(90))
+                        .build();
+                 UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
+
+                 // Load Extraction Prompt
+                 String extractPrompt = loadPrompt("upload_generation_system_prompt.txt");
+                 
+                 // Extract Use Cases
+                 // We use the prompt the user edited, but we need to ensure the AI returns text, not JSON if the prompt asks for JSON.
+                 // The user's prompt says "Generate test efforts...". 
+                 // Let's assume for Stage 1 we want the text that *describes* the test efforts/use cases.
+                 // Actually, if the prompt generates Gherkin/Code, that might be too much.
+                 // But let's trust the 'extractUseCases' definition to return a String/Record.
+                 // Wait, 'extractUseCases' returns 'UseCaseExtractionResult(String requirementsText)'. 
+                 // We need a prompt that asks for *Text Summary* of use cases.
+                 // The user edited 'upload_generation_system_prompt.txt'. Let's use it but maybe append "Output: Text description of use cases."
+                 
+                 // Actually, let's use a simpler prompt for this stage if needed, OR just use the user's prompt and hope 'UseCaseExtractionResult' can parse it.
+                 // LangChain4j might struggle if the prompt asks for complex structure but we expect a String wrapper.
+                 // Let's assume the user's prompt guides the *content*, and we wrap the result.
+                 
+                 String result = assistant.extractUseCases(extractPrompt, "Extract the Use Cases and Test Scenarios from this transcript:\n" + transcriptContent);
+                 
+                 ctx.result(result);
+
+             } catch (Exception e) {
+                 e.printStackTrace();
+                 ctx.status(500).result("Error analyzing transcript: " + e.getMessage());
+             }
+        });
+
+        // Stage 2: Create Test Efforts from Requirements Text
+        app.post("/api/pdm/create-test-efforts", ctx -> {
+            try {
+                String requirementsText = ctx.body();
+                if (requirementsText == null || requirementsText.trim().isEmpty()) {
+                    ctx.status(400).result("No requirements text provided.");
+                    return;
+                }
+
+                // Initialize AI
+                String geminiApiKey = getConfig("GEMINI_API_KEY");
+                ChatModel model = GoogleAiGeminiChatModel.builder()
+                        .apiKey(geminiApiKey)
+                        .modelName("gemini-2.5-flash")
+                        .temperature(0.3)
+                        .timeout(java.time.Duration.ofSeconds(90))
+                        .build();
+                UseCaseAssistant assistant = AiServices.create(UseCaseAssistant.class, model);
+
+                // Load Creation Prompt
+                String createPrompt = loadPrompt("requirements_to_test_efforts_prompt.txt");
+                
+                // Generate Structured Test Efforts
+                TestEffortResponse response = assistant.generateTestEfforts(createPrompt, requirementsText);
+                
+                List<CreatedIssue> createdIssues = new ArrayList<>();
+                if (response != null && response.testEfforts() != null) {
+                    for (TestEffort effort : response.testEfforts()) {
+                        CreatedIssue issue = createJiraIssue(effort.summary(), effort.description(), "Test Effort");
+                        createdIssues.add(issue);
+                    }
+                }
+                
+                ctx.json(new PdmUploadResult(createdIssues));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error creating Test Efforts: " + e.getMessage());
+            }
+        });
         app.post("/update-config", ctx -> {
             try {
                 Map<String, String> payload = ctx.bodyAsClass(Map.class);
@@ -663,6 +777,36 @@ public class AgenticTestOrchestrator {
          spark.stop();
         }
 
+        if ("UPLOAD-ONLY".equals(issueKeyInput)) {
+             System.out.println("Creating Jira Test Efforts from generated test cases...");
+             List<CreatedIssue> createdIssues = new ArrayList<>();
+             StringBuilder resultHtml = new StringBuilder();
+             resultHtml.append("<h3>Created Test Efforts</h3><ul>");
+
+             for (PlaywrightTestCase tc : allTestCases) {
+                 String summary = "[Test] " + tc.scenarioName;
+                 String description = "h3. Gherkin Steps\n" + tc.gherkinSteps + "\n\n" + 
+                                      "h3. Playwright Code\n{code:java}\n" + tc.playwrightJavaCode + "\n{code}";
+                 
+                 try {
+                     CreatedIssue issue = createJiraIssue(summary, description, "Test Effort");
+                     createdIssues.add(issue);
+                     resultHtml.append(String.format("<li><a href='%s' target='_blank'>%s: %s</a></li>", issue.url(), issue.key(), issue.summary()));
+                     System.out.println("Created Jira issue: " + issue.key());
+                 } catch (Exception e) {
+                     System.err.println("Failed to create Jira issue for: " + summary + " - " + e.getMessage());
+                     resultHtml.append(String.format("<li>Failed to create: %s (%s)</li>", summary, e.getMessage()));
+                 }
+             }
+             resultHtml.append("</ul>");
+             
+             if (createdIssues.isEmpty()) {
+                 resultHtml.append("<p>No test cases were generated or created.</p>");
+             }
+             
+             return new PipelineResult(null, "Test Cases Created from Transcript", "N/A", resultHtml.toString());
+        }
+
         // 6. Create consolidated step definition file
         createConsolidatedStepDefinitionFile(allTestCases);
 
@@ -704,7 +848,7 @@ public class AgenticTestOrchestrator {
         }
         System.out.println("--- Finished Jira Quality Check ---");
         
-        return new PipelineResult(prUrl, capturedRequirements, qualityHtml);
+        return new PipelineResult(prUrl, capturedRequirements, qualityHtml, null);
     }
 
     private static List<PlaywrightTestCase> feedDataCleanedUpDatatoLLM(Dataset<Row> cleanedTranscripts, UseCaseAssistant assistant) {
@@ -718,7 +862,7 @@ public class AgenticTestOrchestrator {
                 System.out.println("Going to feed AI");
 
                 try {
-                     String sysPrompt = loadPrompt("playwright_generation_system_prompt.txt");
+                     String sysPrompt = loadPrompt("upload_generation_system_prompt.txt");
                      TestCasesResponse response = assistant.generate(sysPrompt, "Identify use cases from this transcript: " + cleanText);
                      if (response != null && response.testCases != null) {
                          for (PlaywrightTestCase testCase : response.testCases) {
