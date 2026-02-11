@@ -4,4 +4,15 @@ For each item, provide:
 - description: Detailed description
 - acceptanceCriteria: A bulleted list of acceptance criteria
 - type: 'Story' or 'Task'
-Return the result as a JSON object with a list of items.
+Return the result as a JSON object with the following structure:
+{
+  "items": [
+    {
+      "summary": "...",
+      "description": "...",
+      "acceptanceCriteria": "- Criterion 1\n- Criterion 2 (Must be a single string with newlines, NOT an array)",
+      "type": "..."
+    }
+  ]
+}
+IMPORTANT: Return ONLY the raw JSON. Do not include markdown formatting like ```json or ```.

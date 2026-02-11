@@ -152,12 +152,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (statusData.jiraQuality) {
                             document.getElementById('qualityBadge').innerHTML = statusData.jiraQuality;
                         }
+
+                        // Show Created Issues Panel
+                        if (statusData.createdIssuesHtml) {
+                            const issuesPanel = document.getElementById('createdIssuesPanel');
+                            const issuesList = document.getElementById('createdIssuesList');
+                            if (issuesPanel && issuesList) {
+                                issuesList.innerHTML = statusData.createdIssuesHtml;
+                                issuesPanel.style.display = 'block';
+                            }
+                        }
                         
+                        // Hide Quality Panel if empty or N/A logic (Optional, currently keeping generic)
                         if (isFetchOnly) {
                              // Enable Generate Button
                              runBtn.disabled = false;
                              runBtn.innerHTML = '<i class="fas fa-play"></i> Generate Test Cases';
-                             fetchBtn.disabled = false;
                              fetchBtn.disabled = false;
                              fetchBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Pull Requirements';
                              log("Requirements fetched. You can now generate test cases.");
@@ -184,8 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         
 
                         // Enable Run Upload Button if exists
+                        // Enable Run Upload Button if exists
                         const runUploadBtn = document.getElementById('runUploadBtn');
-                        if (runUploadBtn) runUploadBtn.disabled = false;
+                        if (runUploadBtn) {
+                            runUploadBtn.disabled = false;
+                            runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate from Upload';
+                        }
 
                         setThinkingState(false);
 
@@ -248,6 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         log(`Fetching requirements for Epic: ${epicKey}...`);
         
+        // Hide Create Test Efforts Button
+        const createTestEffortsBtn = document.getElementById('createTestEffortsBtn');
+        if (createTestEffortsBtn) createTestEffortsBtn.style.display = 'none';
+
         // Update execution status
         executionStatusText.textContent = "Fetching";
         executionStatusText.style.color = "#FFD700";
@@ -277,8 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const error = await response.text();
                 log(`Failed to fetch requirements: ${error}`, 'error');
                 revertUIState();
-                fetchBtn.disabled = false;
-                fetchBtn.textContent = 'Pull Requirements';
             }
         } catch (e) {
             hideSpinner();
@@ -305,6 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchBtn.disabled = true; // Disable fetch while generating
         
         log(`Starting test generation for Epic: ${epicKey}...`);
+        
+        // Hide Create Test Efforts Button
+        const createTestEffortsBtn = document.getElementById('createTestEffortsBtn');
+        if (createTestEffortsBtn) createTestEffortsBtn.style.display = 'none';
         
         // Update execution status
         executionStatusText.textContent = "Generating";
@@ -370,8 +390,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Generate from Upload Button Logic
+    // Generate from Upload Button Logic (Stage 1)
     const runUploadBtn = document.getElementById('runUploadBtn');
+    const createTestEffortsBtn = document.getElementById('createTestEffortsBtn');
     
     if (runUploadBtn) {
         runUploadBtn.addEventListener('click', async () => {
@@ -382,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            showSpinner("Uploading & Generating...");
+            showSpinner("Analyzing Transcript...");
 
             // Capture custom column name, default to "Text" if empty
             const columnNameInput = document.getElementById('columnName');
@@ -390,19 +411,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Disable button
             runUploadBtn.disabled = true;
+            runUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
 
             setThinkingState(true);
 
             try {
                 const formData = new FormData();
-                // Use a special key to indicate upload-only mode
-                formData.append("epicKey", "UPLOAD-ONLY");
                 formData.append("columnName", columnName);
                 formData.append("transcript", transcriptFile);
                 
                 log(`Uploading transcript: ${transcriptFile.name} (Column: ${columnName})...`);
 
-                const response = await fetch('/run', {
+                const response = await fetch('/api/pdm/transcript-to-requirements', {
                     method: 'POST',
                     body: formData
                 });
@@ -410,21 +430,117 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideSpinner();
 
                 if (response.ok) {
-                    const data = await response.json();
-                    const jobId = data.jobId;
-                    log(`Job started: ${jobId} (Upload Mode)`);
-                    pollStatus(jobId, false);
+                    const extractedText = await response.text();
+                    log("Analysis complete. Review extracted use cases.");
+                    
+                    // Populate and Show Editable Container
+                    const container = document.getElementById('acceptanceCriteriaContainer');
+                    container.innerText = extractedText; // Use innerText to preserve line breaks
+                    container.style.backgroundColor = "rgba(0, 255, 0, 0.05)"; // Slight green tint to indicate success
+                    
+                    // Show Create Button
+                    if (createTestEffortsBtn) {
+                        createTestEffortsBtn.style.display = 'inline-block';
+                    }
+                    
+                    // Reset Upload Button
+                    runUploadBtn.disabled = false;
+                    runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Analyse Again';
+                    
+                    setThinkingState(false);
                 } else {
                     const errorText = await response.text();
-                    log(`Error starting job: ${errorText}`, 'error');
+                    log(`Error analyzing transcript: ${errorText}`, 'error');
                     setThinkingState(false);
                     runUploadBtn.disabled = false;
+                    runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate from Upload';
                 }
             } catch (error) {
                 hideSpinner();
                 log(`Error: ${error.message}`, 'error');
                 setThinkingState(false);
                 runUploadBtn.disabled = false;
+                runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate from Upload';
+            }
+        });
+    }
+
+    // Create Test Efforts Button Logic (Stage 2)
+    if (createTestEffortsBtn) {
+        createTestEffortsBtn.addEventListener('click', async () => {
+            log("Creating JIRA Issues...");
+            const requirementsText = document.getElementById('acceptanceCriteriaContainer').innerText;
+            
+            if (!requirementsText || requirementsText.trim() === "Waiting for upload...") {
+                 alert("Please analyze a transcript first.");
+                 return;
+            }
+
+            // Clear previous results
+            const createdIssuesList = document.getElementById('createdIssuesList');
+            if(createdIssuesList) createdIssuesList.innerHTML = '';
+
+            showSpinner("Creating JIRA Issues...");
+            createTestEffortsBtn.disabled = true;
+            createTestEffortsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            setThinkingState(true);
+
+            try {
+                const response = await fetch('/api/pdm/create-test-efforts', {
+                    method: 'POST',
+                    body: requirementsText
+                });
+                
+                hideSpinner();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Create JIRA Response:", result); // DEBUG
+
+                    // Render Results in panel (reusing the logic from pollStatus essentially)
+                    const createdIssuesPanel = document.getElementById('createdIssuesPanel');
+                    const createdIssuesList = document.getElementById('createdIssuesList');
+                    
+                     if (createdIssuesPanel && createdIssuesList) {
+                         let html = "";
+                         
+                         if (result.issues && result.issues.length > 0) {
+                             result.issues.forEach(issue => {
+                                 // Standard list display
+                                 html += `<li><a href="${issue.url}" target="_blank">${issue.key}: ${issue.summary}</a></li>`;
+                             });
+                             
+                             createdIssuesList.innerHTML = html;
+                             createdIssuesPanel.style.display = 'block'; // Show separate panel
+                             
+                             log(`Successfully created ${result.issues.length} JIRA Issues.`);
+                             
+                         } else {
+                             console.warn("No issues in response:", result);
+                             log("No issues were created. AI response might be empty.", 'warning');
+                         }
+                    } else {
+                        console.error("Issues Panel or List container missing in DOM");
+                    }
+
+                    setThinkingState(false);
+                    createTestEffortsBtn.disabled = false;
+                    createTestEffortsBtn.innerHTML = '<i class="fas fa-magic"></i> Create JIRA';
+                } else {
+                    const errorText = await response.text();
+                    console.error("Server Error:", errorText);
+                    log(`Error creating efforts: ${errorText}`, 'error');
+                    setThinkingState(false);
+                    createTestEffortsBtn.disabled = false;
+                    createTestEffortsBtn.innerHTML = '<i class="fas fa-magic"></i> Create JIRA';
+                }
+            } catch (e) {
+                hideSpinner();
+                console.error("Fetch Exception:", e);
+                log(`Error: ${e.message}`, 'error');
+                setThinkingState(false);
+                createTestEffortsBtn.disabled = false;
+                createTestEffortsBtn.innerHTML = '<i class="fas fa-magic"></i> Create JIRA';
             }
         });
     }
@@ -552,6 +668,12 @@ document.addEventListener('DOMContentLoaded', () => {
             runUploadBtn.disabled = false;
             runUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Generate from Upload';
         }
+        
+        const fetchBtn = document.getElementById('fetchBtn');
+        if (fetchBtn) {
+            fetchBtn.disabled = false;
+            fetchBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Pull Requirements';
+        }
     }
 
     // Initial log
@@ -651,13 +773,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function switchToJiraScanner() {
         if(viewJira) viewJira.style.display = 'flex';
         if(viewTranscript) viewTranscript.style.display = 'none';
+        
+        // Hide Create Test Efforts Button
+        if (createTestEffortsBtn) createTestEffortsBtn.style.display = 'none';
+        
         log("Switched to JIRA Scanner");
     }
 
     function switchToTranscriptUpload() {
         if(viewJira) viewJira.style.display = 'none';
         if(viewTranscript) viewTranscript.style.display = 'flex';
-        log("Switched to Transcript Upload");
+        log("Switched to Discovery Mode");
     }
 
     // Bind QE Tabs
@@ -751,15 +877,22 @@ document.addEventListener('DOMContentLoaded', () => {
                      const data = await response.json(); // PdmUploadResult { items: [] } -> wait, PdmUploadResult has 'issues'
                      log(`Created ${data.issues.length} JIRA Issue(s)`, 'success');
                      
-                     let msg = "Created Issues:\n";
-                     data.issues.forEach(i => {
-                         msg += `${i.key}: ${i.summary} (${i.url})\n`;
-                         log(`Created: <a href="${i.url}" target="_blank">${i.key}</a> - ${i.summary}`);
-                     });
+                     // Log to internal console instead of alert
+                     log("JIRA Issues Created Successfully.", 'success');
                      
-                     // Helper for basic alert
-                     setTimeout(() => alert(msg), 100);
+                     // Populate Created Issues Panel
+                     const createdIssuesPanel = document.getElementById('createdIssuesPanel');
+                     const createdIssuesList = document.getElementById('createdIssuesList');
                      
+                     if (createdIssuesPanel && createdIssuesList) {
+                         let html = "";
+                         data.issues.forEach(issue => {
+                             html += `<li><a href="${issue.url}" target="_blank">${issue.key}: ${issue.summary}</a></li>`;
+                         });
+                         createdIssuesList.innerHTML = html;
+                         // createdIssuesPanel.style.display = 'block'; // Already visible by default
+                     }
+                      
                      // Clear input
                      document.getElementById('jiraInfoInput').value = "";
                  } else {
