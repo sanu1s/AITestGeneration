@@ -21,34 +21,28 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("button:has-text('" + buttonText + "')").click();
-}
-
-@Given("I am on the order tracking page")
-public void iAmOnTheOrderTrackingPage() {
+@Given("User is on the order tracking page")
+public void userIsOnOrderTrackingPage() {
     System.out.println("Navigating to order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
 }
 
+@When("User clicks {string} button")
+public void userClicksButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
+}
+
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
+    System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String errorMessage) {
-    System.out.println("Verifying error message: " + errorMessage);
-    assertThat(page.locator(".result")).containsText(errorMessage);
-}
-
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Then("The result message should display {string}")
+public void theResultMessageShouldDisplay(String expectedMessage) {
+    System.out.println("Verifying result message: " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
