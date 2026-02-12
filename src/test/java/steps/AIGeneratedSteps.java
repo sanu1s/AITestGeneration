@@ -27,9 +27,9 @@ public void userClicksTheButton(String buttonText) {
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Given("User is on the order tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page.");
+@Given("I am on the order tracking page")
+public void iAmOnTheOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
 }
 
@@ -39,16 +39,16 @@ public void userEntersOrderNumber(String orderNo) {
     page.locator("#order_no").fill(orderNo);
 }
 
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String errorMessage) {
+    System.out.println("Verifying error message: " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
+}
+
 @Then("The order status should display {string}")
 public void theOrderStatusShouldDisplay(String expectedStatus) {
     System.out.println("Verifying order status: " + expectedStatus);
     assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
-@Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
