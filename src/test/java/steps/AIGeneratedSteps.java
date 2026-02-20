@@ -21,38 +21,35 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("the bot should not provide specific business hours information")
-public void botShouldNotProvideSpecificBusinessHoursInformation() {
-    System.out.println("Executing: Verifying bot does not provide specific business hours");
-    // Assuming specific business hours would contain digits or common time phrases
-    assertThat(page.locator(".result")).doesNotContainText("open from");
-    assertThat(page.locator(".result")).doesNotContainText("closed at");
-    assertThat(page.locator(".result")).doesNotContainText("9 AM to 5 PM"); // Example specific time
-    assertThat(page.locator(".result")).doesNotContainText("hours are");
-}
-
-@Then("the bot should respond with {string}")
-public void botShouldRespondWith(String expectedResponse) {
-    System.out.println("Executing: Verifying bot response: " + expectedResponse);
-    assertThat(page.locator(".result")).containsText(expectedResponse);
-}
-
-@When("the user clicks the Track Order button")
-public void userClicksTrackOrderButton() {
-    System.out.println("Executing: User clicks Track Order button");
-    page.locator("button:has-text('Track Order')").click();
-}
-
-@Given("the user navigates to the order tracking page")
-public void navigateToOrderTrackingPage() {
-    System.out.println("Executing: Navigating to order tracking page");
+@Given("user is on the order tracking page")
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
+    assertThat(page).hasURL("http://localhost:8088/order/tracking");
 }
 
-@When("the user sends the message {string}")
-public void userSendsMessage(String message) {
-    System.out.println("Executing: User sends message: " + message);
-    page.locator("#order_no").fill(message);
+@When("User clicks the {string} button")
+public void userClicksTheButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
+}
+
+@Then("The order status should be {string}")
+public void theOrderStatusShouldBe(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
+}
+
+@When("User enters order number {string}")
+public void userEntersOrderNumber(String orderNo) {
+    System.out.println("Typing order number: " + orderNo);
+    page.locator("#order_no").fill(orderNo);
+}
+
+@Then("The result message should display {string}")
+public void theResultMessageShouldDisplay(String expectedMessage) {
+    System.out.println("Verifying error message: " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
