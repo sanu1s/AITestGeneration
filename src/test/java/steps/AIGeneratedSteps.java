@@ -33,28 +33,16 @@ public void userIsOnOrderTrackingPage() {
     page.navigate("http://localhost:8088/order/tracking");
 }
 
-@When("User leaves the order number field empty")
-public void userLeavesOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty");
-    page.locator("#order_no").fill("");
+@Then("The status message should display {string}")
+public void theStatusMessageShouldDisplay(String expectedMessage) {
+    System.out.println("Verifying status message: " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
     System.out.println("Typing order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
-}
-
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
-@Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
