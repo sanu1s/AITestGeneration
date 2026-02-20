@@ -21,34 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("user is on the order tracking page")
+@When("User clicks the {string} button")
+public void userClicksTheButton(String buttonText) {
+    System.out.println("Executing: User clicks the " + buttonText + " button");
+    page.locator("button:has-text('" + buttonText + "')").click();
+}
+
+@Given("User is on the order tracking page")
 public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page");
+    System.out.println("Executing: User is on the order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
     assertThat(page).hasURL("http://localhost:8088/order/tracking");
 }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("button:has-text('" + buttonText + "')").click();
-}
-
-@Then("The order status should be {string}")
-public void theOrderStatusShouldBe(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+    System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
+}
+
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Executing: The order status should display " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 @Then("The result message should display {string}")
 public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying error message: " + expectedMessage);
+    System.out.println("Executing: The result message should display " + expectedMessage);
     assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 

@@ -1,7 +1,7 @@
 Feature: Order Tracking - Negative Scenarios
 
-  Scenario: Display error for non-numeric order number
+  Scenario: Display error for another non-numeric order number
     Given User is on the order tracking page
-    When User enters order number "ABCDE"
+    When User enters order number "ORD1"
     And User clicks the "Track Order" button
     Then The result message should display "Order number must be numericasdasdsadaddsa"
