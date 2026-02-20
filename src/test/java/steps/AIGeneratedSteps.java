@@ -35,20 +35,20 @@ public void userIsOnOrderTrackingPage() {
 
 @When("User enters order number {string}")
 public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+    System.out.println("Entering order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
 @Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+public void theOrderStatusShouldDisplay(String statusMessage) {
+    System.out.println("Verifying order status message: " + statusMessage);
+    assertThat(page.locator(".result")).containsText(statusMessage);
 }
 
 @Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+public void theResultMessageShouldDisplay(String errorMessage) {
+    System.out.println("Verifying error message: " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 }
