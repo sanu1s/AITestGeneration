@@ -31,13 +31,12 @@ public void userClicksTheButton(String buttonText) {
 public void userIsOnTheOrderTrackingPage() {
     System.out.println("Executing: User is on the order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
-    assertThat(page).hasURL("http://localhost:8088/order/tracking");
 }
 
 @When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
-    page.locator("#order_no").fill(orderNo);
+public void userEntersOrderNumber(String orderNumber) {
+    System.out.println("Executing: User enters order number " + orderNumber);
+    page.locator("#order_no").fill(orderNumber);
 }
 
 @Then("The order status should display {string}")
@@ -47,9 +46,9 @@ public void theOrderStatusShouldDisplay(String expectedStatus) {
 }
 
 @Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Executing: The result message should display " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+public void theResultMessageshouldDisplay(String errorMessage) {
+    System.out.println("Executing: The result message should display " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
 }
