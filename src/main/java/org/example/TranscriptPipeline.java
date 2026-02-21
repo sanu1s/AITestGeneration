@@ -9,6 +9,7 @@ import dev.langchain4j.service.AiServices;
 import java.util.ArrayList;
 import java.util.List;
 import dev.langchain4j.model.chat.ChatModel;
+import java.io.File;
 
 public class TranscriptPipeline {
 
@@ -43,8 +44,25 @@ public class TranscriptPipeline {
 
         // 4. Initialize LangChain4j Model and Service fro open AI
        
+        String geminiApiKey = System.getenv("GEMINI_API_KEY");
+        if (geminiApiKey == null || geminiApiKey.isEmpty()) {
+            // Fallback to reading from local.properties if env var is missing
+            try {
+                java.util.Properties props = new java.util.Properties();
+                File propFile = new File("local.properties");
+                if (propFile.exists()) {
+                    try (java.io.FileInputStream fis = new java.io.FileInputStream(propFile)) {
+                        props.load(fis);
+                        geminiApiKey = props.getProperty("GEMINI_API_KEY");
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+
         ChatModel model = GoogleAiGeminiChatModel.builder()
-                .apiKey("key")
+                .apiKey(geminiApiKey)
                 .modelName("gemini-2.5-flash") // Use latest models like 2.5 Flash
                 .temperature(0.7)
                 .build();

@@ -569,6 +569,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptEditor = document.getElementById('promptEditor');
     const savePromptBtn = document.getElementById('savePromptBtn');
     const refreshPromptsBtn = document.getElementById('refreshPromptsBtn');
+    const promptDescription = document.getElementById('promptDescription');
+
+    const promptDetails = {
+        'jira_creation_system_prompt.txt': 'AI instructions for generating structured JIRA tickets (Story, Task, Bug) from requirement descriptions.',
+        'jira_quality_system_prompt.txt': 'Governs the Quality Analysis stage, defining rules for completeness and ambiguity checks.',
+        'playwright_generation_system_prompt.txt': 'The primary prompt for generating Gherkin Features and Playwright Java Step Definitions from retrieved Jira requirements.',
+        'requirements_to_test_efforts_prompt.txt': 'Used in Discovery Mode (Stage 2) to convert extracted use cases into structured JIRA Test Efforts.',
+        'upload_generation_system_prompt.txt': 'Used in Discovery Mode (Stage 1) to extract raw Use Cases and Scenarios from call transcripts or raw logs.',
+        'test_prompt.txt': 'A baseline or diagnostic prompt used for system verification.'
+    };
 
     async function loadPromptList() {
         try {
@@ -599,6 +609,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const content = await response.text();
                     if (promptEditor) {
                          promptEditor.value = content;
+                    }
+                    if (promptDescription) {
+                        promptDescription.textContent = promptDetails[filename] || 'Configuration file for AI behavior.';
                     }
                     if (savePromptBtn) {
                         savePromptBtn.disabled = false;

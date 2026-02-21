@@ -79,6 +79,30 @@ public class AgenticTestOrchestrator {
     private static final Map<String, JobStatus> jobs = new ConcurrentHashMap<>();
     // Dynamic Configuration
     private static final Map<String, String> dynamicConfig = new ConcurrentHashMap<>();
+
+    static {
+        // Load local.properties on startup
+        try {
+            File propertiesFile = new File("local.properties");
+            if (propertiesFile.exists()) {
+                java.util.Properties props = new java.util.Properties();
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(propertiesFile)) {
+                    props.load(fis);
+                    for (String key : props.stringPropertyNames()) {
+                        String val = props.getProperty(key);
+                        if (val != null && !val.trim().isEmpty()) {
+                            dynamicConfig.put(key, val.trim());
+                        }
+                    }
+                    System.out.println("Loaded configurations from local.properties. GEMINI_API_KEY found: " + dynamicConfig.containsKey("GEMINI_API_KEY"));
+                }
+            } else {
+                System.out.println("local.properties not found at: " + propertiesFile.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading local.properties: " + e.getMessage());
+        }
+    }
     
     // Helper to get config (Dynamic > Env > System Prop)
     private static String getConfig(String key) {
@@ -87,7 +111,7 @@ public class AgenticTestOrchestrator {
         }
         String env = System.getenv(key);
         if (env != null && !env.isEmpty()) return env;
-        return "";
+        return null;
     }
     
     // Records for data exchange
@@ -366,6 +390,9 @@ public class AgenticTestOrchestrator {
                 try {
                     // Create minimal Assistant just for Quality Check (Gemini setup duplicate but fine)
                      String geminiApiKey = getConfig("GEMINI_API_KEY");
+                     if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
+                         throw new IllegalArgumentException("GEMINI_API_KEY is missing. Please ensure it is set in local.properties or as an environment variable.");
+                     }
                      ChatModel model = GoogleAiGeminiChatModel.builder()
                         .apiKey(geminiApiKey)
                         .modelName("gemini-2.5-flash")
@@ -687,10 +714,8 @@ public class AgenticTestOrchestrator {
         String githubUser = getConfig("GITHUB_USER");
 
         if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
-             System.err.println("CRITICAL: GEMINI_API_KEY is missing!");
-             throw new IllegalArgumentException("GEMINI_API_KEY environment variable is not set.");
-        }   
-
+             throw new IllegalArgumentException("GEMINI_API_KEY is missing. Please ensure it is set in local.properties or as an environment variable.");
+        }
 
         ChatModel model = GoogleAiGeminiChatModel.builder()
                 .apiKey(geminiApiKey)
@@ -1301,11 +1326,21 @@ public class AgenticTestOrchestrator {
 
     private static String pushToGitHub(String branchName, String commitMessage) {
         System.out.println("\n--- Pushing to GitHub ---");
+        String user = getConfig("GITHUB_USER");
+        String token = getConfig("GITHUB_TOKEN");
+
+        if (token == null || token.trim().isEmpty()) {
+            System.err.println("Critical: GITHUB_TOKEN is missing. Push aborted.");
+            return null;
+        }
+
+        System.out.println("Using GitHub User: " + user);
+        System.out.println("Using GitHub Token: " + (token.length() > 8 ? token.substring(0, 4) + "****" : "****"));
+
         try {
             File localPath = new File(".");
             Git git;
             
-            // Try to open existing repository or initialize if not exists
             try {
                 git = Git.open(localPath);
             } catch (Exception e) {
@@ -1313,33 +1348,46 @@ public class AgenticTestOrchestrator {
                 git = Git.init().setDirectory(localPath).call();
             }
             
-            // Check if HEAD exists (if not, it's a new repo with no commits)
+            // Configure remote if it doesn't exist
+            org.eclipse.jgit.lib.StoredConfig config = git.getRepository().getConfig();
+            config.setString("remote", "origin", "url", GITHUB_REPO_URL);
+            config.save();
+
+            // Check if HEAD exists
             if (git.getRepository().resolve("HEAD") == null) {
-                // Initial commit
                 git.add().addFilepattern(".").call();
                 git.commit().setMessage("Initial commit").call();
             }
 
-            // Create branch
-            git.branchCreate().setName(branchName).call();
+            // Create branch if needed
+            boolean branchExists = git.branchList().call().stream()
+                    .anyMatch(ref -> ref.getName().equals("refs/heads/" + branchName));
+            
+            if (!branchExists) {
+                git.branchCreate().setName(branchName).call();
+            }
             git.checkout().setName(branchName).call();
 
-            // Add all files
+            // Add and Commit
             git.add().addFilepattern("src/test/resources/features").call();
             git.add().addFilepattern("src/test/java/steps").call();
-            
-            // Commit
             git.commit().setMessage(commitMessage).call();
             
-            // Push
-            // Assuming origin exists. Use UsernamePasswordCredentialsProvider with GITHUB_TOKEN
-             git.push()
-                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(getConfig("GITHUB_USER"), getConfig("GITHUB_TOKEN")))
+            // Push with explicit remote and credentials
+            System.out.println("Pushing to " + GITHUB_REPO_URL + " on branch " + branchName);
+            git.push()
+                .setRemote("origin")
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(user, token))
+                .setForce(true)
                 .call();
                 
              String repoUrl = GITHUB_REPO_URL.replace(".git", "");
              return repoUrl + "/pull/new/" + branchName;
 
+        } catch (org.eclipse.jgit.api.errors.TransportException te) {
+            System.err.println("GitHub Authorization Failed: " + te.getMessage());
+            System.err.println("Action: Please verify that GITHUB_TOKEN in local.properties is valid and has 'repo' scope.");
+            return null;
         } catch (Exception e) {
             System.err.println("Error pushing to GitHub: " + e.getMessage());
             e.printStackTrace();
