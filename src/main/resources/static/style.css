@@ -503,6 +503,18 @@ body {
     color: var(--text-primary);
 }
 
+.prompt-description {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--accent-purple);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-radius: 0 4px 4px 0;
+    line-height: 1.4;
+    font-style: italic;
+}
+
 /* select element specific overrides */
 select.prompt-editor-input {
     font-family: 'Inter', sans-serif;

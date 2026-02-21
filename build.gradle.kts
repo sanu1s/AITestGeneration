@@ -84,6 +84,8 @@ dependencies {
         exclude(group = "org.glassfish.jersey")
         exclude(group="javax.ws.rs")
         exclude(group="jakarta.ws.rs")
+        exclude(group = "io.grpc")
+        exclude(group = "io.netty")
     }
 // Optional: Machine Learning or Streaming
     implementation("org.apache.spark:spark-mllib_2.13:4.1.1")
@@ -91,19 +93,16 @@ dependencies {
         exclude(group = "org.glassfish.jersey")
         exclude(group="javax.ws.rs")
         exclude(group="jakarta.ws.rs")
-
+        exclude(group = "io.grpc")
+        exclude(group = "io.netty")
     }
     implementation("org.apache.spark:spark-streaming_2.13:4.1.1")
     {
         exclude(group = "org.glassfish.jersey")
         exclude(group="javax.ws.rs")
         exclude(group="jakarta.ws.rs")
-
-    }
-    implementation("org.apache.spark:spark-streaming_2.13:4.1.1") {
-        exclude(group = "org.glassfish.jersey")
-        exclude(group = "javax.ws.rs")
-        exclude(group = "jakarta.ws.rs")
+        exclude(group = "io.grpc")
+        exclude(group = "io.netty")
     }
 
     //Gemini AI Support
@@ -161,7 +160,16 @@ configurations.all {
             "jakarta.ws.rs:jakarta.ws.rs-api:3.1.0",
             "org.glassfish.jersey.core:jersey-client:3.1.3",
             "org.glassfish.jersey.core:jersey-common:3.1.3",
-            "org.glassfish.jersey.inject:jersey-hk2:3.1.3"
+            "org.glassfish.jersey.inject:jersey-hk2:3.1.3",
+            "io.grpc:grpc-api:1.69.0",
+            "io.grpc:grpc-core:1.69.0",
+            "io.grpc:grpc-netty-shaded:1.69.0",
+            "io.grpc:grpc-protobuf:1.69.0",
+            "io.grpc:grpc-stub:1.69.0",
+            "io.grpc:grpc-context:1.69.0",
+            "io.netty:netty-all:4.1.115.Final",
+            "io.netty:netty-handler:4.1.115.Final",
+            "io.netty:netty-common:4.1.115.Final"
         )
     }
 }
