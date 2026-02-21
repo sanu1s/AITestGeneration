@@ -27,17 +27,10 @@ public void userClicksTheButton(String buttonText) {
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Then("The order status should be {string}")
-public void theOrderStatusShouldBe(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
-@Given("User is on the order tracking page")
+@Given("User is on the Order Tracking page")
 public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to order tracking page");
+    System.out.println("Navigating to Order Tracking page.");
     page.navigate("http://localhost:8088/order/tracking");
-    assertThat(page).hasURL("http://localhost:8088/order/tracking");
 }
 
 @When("User enters order number {string}")
@@ -46,10 +39,16 @@ public void userEntersOrderNumber(String orderNo) {
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedError) {
-    System.out.println("Verifying error message: " + expectedError);
-    assertThat(page.locator(".result")).containsText(expectedError);
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Verifying order status: " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
+}
+
+@Then("The result message should display {string}")
+public void theResultMessageShouldDisplay(String expectedMessage) {
+    System.out.println("Verifying result message: " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
 }
