@@ -21,46 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("The order status should be {string}")
-public void theOrderStatusShouldBe(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Then("I should see the result message {string}")
+public void iShouldSeeTheResultMessage(String expectedMessage) {
+    System.out.println("Executing: I should see the result message " + expectedMessage);
+    assertThat(page.locator(".result")).containsText(expectedMessage);
 }
 
-@When("User enters an empty order number")
-public void userEntersAnEmptyOrderNumber() {
-    System.out.println("Typing empty order number");
-    page.locator("#order_no").fill("");
-}
-
-@Then("The URL should remain on the Order Tracking page")
-public void theURLShouldRemainOnTheOrderTrackingPage() {
-    System.out.println("Verifying URL");
-    assertThat(page).hasURL("http://localhost:8088/order/tracking");
-}
-
-@When("User clicks the Track Order button")
-public void userClicksTheTrackOrderButton() {
-    System.out.println("Clicking Track Order button");
-    page.locator("button:has-text('Track Order')").click();
-}
-
-@Given("User is on the Order Tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to Order Tracking page");
+@Given("I am on the order tracking page")
+public void iAmOnTheOrderTrackingPage() {
+    System.out.println("Executing: I am on the order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
 }
 
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+@When("I leave the order number field empty")
+public void iLeaveTheOrderNumberFieldEmpty() {
+    System.out.println("Executing: I leave the order number field empty");
+    page.locator("#order_no").fill("");
+}
+
+@When("I enter order number {string}")
+public void iEnterOrderNumber(String orderNo) {
+    System.out.println("Executing: I enter order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String errorMessage) {
-    System.out.println("Verifying result message: " + errorMessage);
-    assertThat(page.locator(".result")).containsText(errorMessage);
+@When("I click {string}")
+public void iClickTrackOrder(String buttonText) {
+    System.out.println("Executing: I click " + buttonText);
+    page.locator("button:has-text('" + buttonText + "')").click();
 }
 
 }
