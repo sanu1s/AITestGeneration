@@ -22,33 +22,33 @@ public class AIGeneratedSteps {
     }
 
 @When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
+public void clickTrackOrderButton(String buttonText) {
     System.out.println("Clicking button: " + buttonText);
     page.locator("button:has-text('" + buttonText + "')").click();
 }
 
-@Given("User is on the Order Tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to Order Tracking page.");
+@Given("User navigates to the order tracking page")
+public void navigateToOrderTrackingPage() {
+    System.out.println("Navigating to order tracking page");
     page.navigate("http://localhost:8088/order/tracking");
 }
 
 @When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Typing order number: " + orderNo);
+public void enterOrderNumber(String orderNo) {
+    System.out.println("Entering order number: " + orderNo);
     page.locator("#order_no").fill(orderNo);
 }
 
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Then("The error message should display {string}")
+public void verifyErrorMessage(String errorMessage) {
+    System.out.println("Verifying error message: " + errorMessage);
+    assertThat(page.locator(".result")).containsText(errorMessage);
 }
 
-@Then("The result message should display {string}")
-public void theResultMessageShouldDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
+@Then("The order status should display {string}")
+public void verifyOrderStatus(String statusMessage) {
+    System.out.println("Verifying order status: " + statusMessage);
+    assertThat(page.locator(".result")).containsText(statusMessage);
 }
 
 }
