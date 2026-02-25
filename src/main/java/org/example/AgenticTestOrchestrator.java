@@ -128,7 +128,7 @@ public class AgenticTestOrchestrator {
     
     // New Records for Two-Stage Workflow
     record UseCaseExtractionResult(String requirementsText) {}
-    record TestEffort(String summary, String description) {}
+    record TestEffort(String summary, String description, String acceptanceCriteria) {}
     record TestEffortResponse(List<TestEffort> testEfforts) {}
 
     private static final String JIRA_URL = "https://techsavy.atlassian.net";
@@ -629,7 +629,11 @@ public class AgenticTestOrchestrator {
                 List<CreatedIssue> createdIssues = new ArrayList<>();
                 if (response != null && response.testEfforts() != null) {
                     for (TestEffort effort : response.testEfforts()) {
-                        CreatedIssue issue = createJiraIssue(effort.summary(), effort.description(), "Test Effort");
+                        String finalDescription = effort.description();
+                        if (effort.acceptanceCriteria() != null && !effort.acceptanceCriteria().isEmpty()) {
+                            finalDescription += "\n\n*Acceptance Criteria:*\n" + effort.acceptanceCriteria();
+                        }
+                        CreatedIssue issue = createJiraIssue(effort.summary(), finalDescription, "Story");
                         createdIssues.add(issue);
                     }
                 }
@@ -803,18 +807,22 @@ public class AgenticTestOrchestrator {
         }
 
         if ("UPLOAD-ONLY".equals(issueKeyInput)) {
-             System.out.println("Creating Jira Test Efforts from generated test cases...");
+             System.out.println("Creating Jira Stories from generated test cases...");
              List<CreatedIssue> createdIssues = new ArrayList<>();
              StringBuilder resultHtml = new StringBuilder();
-             resultHtml.append("<h3>Created Test Efforts</h3><ul>");
+             resultHtml.append("<h3>Created Jira Stories</h3><ul>");
 
              for (PlaywrightTestCase tc : allTestCases) {
-                 String summary = "[Test] " + tc.scenarioName;
+                 String summary = "[Story] " + tc.scenarioName;
                  String description = "h3. Gherkin Steps\n" + tc.gherkinSteps + "\n\n" + 
                                       "h3. Playwright Code\n{code:java}\n" + tc.playwrightJavaCode + "\n{code}";
+                  
+                  if (tc.acceptanceCriteria != null && !tc.acceptanceCriteria.isEmpty()) {
+                      description += "\n\n*Acceptance Criteria:*\n" + tc.acceptanceCriteria;
+                  }
                  
                  try {
-                     CreatedIssue issue = createJiraIssue(summary, description, "Test Effort");
+                     CreatedIssue issue = createJiraIssue(summary, description, "Story");
                      createdIssues.add(issue);
                      resultHtml.append(String.format("<li><a href='%s' target='_blank'>%s: %s</a></li>", issue.url(), issue.key(), issue.summary()));
                      System.out.println("Created Jira issue: " + issue.key());
