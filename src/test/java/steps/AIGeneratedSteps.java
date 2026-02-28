@@ -21,75 +21,34 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("User should see an input field labeled {string}")
-public void verifyInputFieldLabeled(String label) {
-    System.out.println("Verifying input field labeled: " + label);
-    assertThat(page.locator("label:has-text('" + label + "')")).isVisible();
-    assertThat(page.locator("#order_no")).isVisible();
+@Given("User is on the order tracking page")
+public void userIsOnOrderTrackingPage() {
+    System.out.println("Executing: User is on the order tracking page");
+    page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
-@Then("User should see a {string} button")
-public void verifyButton(String buttonText) {
-    System.out.println("Verifying button: " + buttonText);
-    assertThat(page.locator("button:has-text('" + buttonText + "')")).isVisible();
+@When("User clicks the Track Order button")
+public void userClicksTrackOrderButton() {
+    System.out.println("Executing: User clicks the Track Order button");
+    page.locator("button:has-text('Track Order')").click();
 }
 
-@Then("The order status should be {string}")
-public void verifyOrderStatus(String expectedStatus) {
-    System.out.println("Verifying order status: " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
-}
-
-@Then("User should see an empty area for search results")
-public void verifyEmptySearchResultsArea() {
-    System.out.println("Verifying empty search results area");
-    assertThat(page.locator(".result")).isVisible();
-    assertThat(page.locator(".result")).isEmpty();
-}
-
-@When("User enters order number {string} and tracks it")
-public void enterOrderAndTrack(String orderNo) {
-    System.out.println("Entering order number: " + orderNo + " and clicking Track Order");
+@When("User enters order number {string}")
+public void userEntersOrderNumber(String orderNo) {
+    System.out.println("Executing: User enters order number " + orderNo);
     page.locator("#order_no").fill(orderNo);
-    page.locator("button:has-text('Track Order')").click();
 }
 
-@When("User tracks an empty order number")
-public void trackEmptyOrderNumber() {
-    System.out.println("Leaving order number empty and clicking Track Order");
-    page.locator("#order_no").fill(""); // Ensure the field is empty
-    page.locator("button:has-text('Track Order')").click();
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String expectedError) {
+    System.out.println("Executing: The error message should display " + expectedError);
+    assertThat(page.locator(".result")).containsText(expectedError);
 }
 
-@Given("User navigates to the Order Search page")
-public void navigateToOrderSearchPage() {
-    System.out.println("Navigating to http://localhost:7070/");
-    page.navigate("http://localhost:7070/");
-}
-
-@Then("User should see the title {string}")
-public void verifyPageTitle(String title) {
-    System.out.println("Verifying page title: " + title);
-    assertThat(page.locator("h1")).containsText(title);
-}
-
-@Then("The result area should display {string}")
-public void verifyResultAreaMessage(String expectedMessage) {
-    System.out.println("Verifying result area message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
-}
-
-@Given("User is on the Order Search page")
-public void userIsOnOrderSearchPage() {
-    System.out.println("Navigating to http://localhost:7070/");
-    page.navigate("http://localhost:7070/");
-}
-
-@When("User enters an invalid order number {string} and tracks it")
-public void enterInvalidOrderAndTrack(String invalidOrderNo) {
-    System.out.println("Entering invalid order number: " + invalidOrderNo + " and clicking Track Order");
-    page.locator("#order_no").fill(invalidOrderNo);
-    page.locator("button:has-text('Track Order')").click();
+@Then("The order status should display {string}")
+public void theOrderStatusShouldDisplay(String expectedStatus) {
+    System.out.println("Executing: The order status should display " + expectedStatus);
+    assertThat(page.locator(".result")).containsText(expectedStatus);
 }
 
 }
