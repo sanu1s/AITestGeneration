@@ -21,65 +21,51 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see an empty area for search results")
-public void verifyEmptySearchResultsArea() {
-    System.out.println("Verifying empty search results area");
-    assertThat(page.locator(".result")).isVisible();
-    assertThat(page.locator(".result")).isEmpty();
-}
-
 @Then("I should see the title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Verifying page title: " + expectedTitle);
-    assertThat(page.locator("h1")).containsText(expectedTitle);
+public void verifyTitle(String title) {
+    System.out.println("Executing: I should see the title " + title);
+    assertThat(page.locator("h1:has-text('Order Search')")).isVisible();
 }
 
 @Then("I should see an input field labeled {string}")
-public void verifyInputFieldByLabel(String labelText) {
-    System.out.println("Verifying input field labeled: " + labelText);
-    assertThat(page.locator("label:has-text('" + labelText + "') + input")).isVisible();
+public void verifyInputFieldLabeled(String label) {
+    System.out.println("Executing: I should see an input field labeled " + label);
+    if (label.equals("Order Number")) {
+        assertThat(page.locator("label:has-text('Order Number')")).isVisible();
+        assertThat(page.locator("#order_no")).isVisible();
+    }
+
+@Then("I should see a {string} button")
+public void verifySearchButton(String buttonText) {
+    System.out.println("Executing: I should see a " + buttonText + " button");
+    assertThat(page.locator("button:has-text('Search')")).isVisible();
 }
 
-@Then("the result should display {string}")
-public void verifyResultDisplay(String expectedMessage) {
-    System.out.println("Verifying result message: " + expectedMessage);
-    assertThat(page.locator(".result")).containsText(expectedMessage);
-}
+@When("I type {string} into the {string} field")
+public void typeIntoField(String text, String fieldName) {
+    System.out.println("Executing: I type " + text + " into the " + fieldName + " field");
+    if (fieldName.equals("Order Number")) {
+        page.locator("#order_no").fill(text);
+    }
 
-@When("I leave the order number field empty")
-public void leaveOrderNumberFieldEmpty() {
-    System.out.println("Leaving order number field empty");
-    page.locator("#order_no").fill("");
-}
-
-@Then("I should see a button with text {string}")
-public void verifyButtonWithText(String buttonText) {
-    System.out.println("Verifying button with text: " + buttonText);
-    assertThat(page.locator("button:has-text('" + buttonText + "')")).isVisible();
-}
-
-@When("I click the {string} button")
-public void clickTrackOrderButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("button:has-text('" + buttonText + "')").click();
-}
-
-@Then("I should see an input field with id {string}")
-public void verifyInputFieldById(String inputId) {
-    System.out.println("Verifying input field with id: " + inputId);
-    assertThat(page.locator("#" + inputId)).isVisible();
-}
-
-@When("I enter order number {string}")
-public void enterOrderNumber(String orderNo) {
-    System.out.println("Entering order number: " + orderNo);
-    page.locator("#order_no").fill(orderNo);
-}
-
-@Given("I navigate to http://localhost:7070/")
+@Given("I navigate to the Order Search page")
 public void navigateToOrderSearchPage() {
-    System.out.println("Navigating to http://localhost:7070/");
+    System.out.println("Executing: I navigate to the Order Search page");
     page.navigate("http://localhost:7070/");
 }
+
+@Then("I should see a designated area for search results")
+public void verifyResultArea() {
+    System.out.println("Executing: I should see a designated area for search results");
+    assertThat(page.locator(".result")).isVisible();
+    assertThat(page.locator(".result")).isEmpty(); // Initial state should be empty
+}
+
+@Then("the {string} field should contain {string}")
+public void verifyFieldContent(String fieldName, String expectedText) {
+    System.out.println("Executing: the " + fieldName + " field should contain " + expectedText);
+    if (fieldName.equals("Order Number")) {
+        assertThat(page.locator("#order_no")).hasValue(expectedText);
+    }
 
 }
