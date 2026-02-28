@@ -21,63 +21,102 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see the result display area with ID {string} is initially empty or hidden")
-public void verifyResultAreaInitiallyEmptyOrHidden(String resultAreaId) {
-    System.out.println("Executing: I should see the result display area with ID " + resultAreaId + " is initially empty or hidden");
-    // Check if it's visible, and if visible, it should be empty. Otherwise, it might be hidden.
-    // Assuming it's visible but empty as per 'designated, empty area'
-    assertThat(page.locator("#" + resultAreaId)).isVisible();
-    assertThat(page.locator("#" + resultAreaId)).isEmpty(); // Asserts that the element contains no text or children
-}
-
 @Then("I should see a dropdown with ID {string}")
-public void verifyDropdownWithId(String dropdownId) {
-    System.out.println("Executing: I should see a dropdown with ID " + dropdownId);
-    assertThat(page.locator("#" + dropdownId)).isVisible();
+public void verifyDropdownWithId(String id) {
+    System.out.println("Verifying dropdown with ID: " + id);
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Then("And the dropdown should contain option {string}")
-public void verifyDropdownOption(String optionText) {
-    System.out.println("Executing: And the dropdown should contain option " + optionText);
-    assertThat(page.locator("#searchType")).containsText(optionText);
+@Then("I should see an input field with ID {string}")
+public void verifyInputFieldWithId(String id) {
+    System.out.println("Verifying input field with ID: " + id);
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Then("And I should see a designated area for displaying search results with ID {string}")
-public void verifyResultAreaWithId(String resultAreaId) {
-    System.out.println("Executing: I should see a designated area for displaying search results with ID " + resultAreaId);
-    assertThat(page.locator("#" + resultAreaId)).isVisible();
+@Then("I should not see an element with ID {string}")
+public void verifyElementWithIdNotPresent(String unexpectedId) {
+    System.out.println("Verifying element with ID '" + unexpectedId + "' is NOT present.");
+    assertThat(page.locator("#" + unexpectedId)).not().isVisible();
 }
 
-@Given("I navigate to http:\/\/localhost:7070\/")
-public void navigateToOrderSearchPage() {
-    System.out.println("Executing: I navigate to http://localhost:7070/");
-    page.navigate("http://localhost:7070/");
+@Then("the order details area with ID {string} should be visible")
+public void verifyOrderDetailsAreaVisible(String id) {
+    System.out.println("Verifying order details area " + id + " is visible.");
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Then("And the error message area with ID {string} is not visible")
-public void verifyErrorMessageAreaIsNotVisible(String errorAreaId) {
-    System.out.println("Executing: And the error message area with ID " + errorAreaId + " is not visible");
-    assertThat(page.locator("#" + errorAreaId)).isHidden();
+@Then("the display status area with ID {string} should be empty")
+public void verifyDisplayStatusAreaEmpty(String id) {
+    System.out.println("Verifying display status area " + id + " is empty.");
+    assertThat(page.locator("#" + id)).hasText("");
+}
+
+@Then("I should see a {string} button with ID {string}")
+public void verifyButtonWithId(String buttonText, String id) {
+    System.out.println("Verifying button " + buttonText + " with ID: " + id);
+    assertThat(page.locator("#" + id)).isVisible();
+    assertThat(page.locator("#" + id)).containsText(buttonText);
+}
+
+@Given("I navigate to {string}")
+public void navigateToUrl(String url) {
+    System.out.println("Navigating to: " + url);
+    page.navigate(url);
+}
+
+@Then("the {string} field should have placeholder {string}")
+public void verifyInputFieldPlaceholder(String id, String placeholder) {
+    System.out.println("Verifying input field " + id + " has placeholder: " + placeholder);
+    assertThat(page.locator("#" + id)).hasAttribute("placeholder", placeholder);
+}
+
+@Then("I should not see an element with text {string}")
+public void verifyElementWithTextNotPresent(String unexpectedText) {
+    System.out.println("Verifying element with text '" + unexpectedText + "' is NOT present.");
+    assertThat(page.locator("text=" + unexpectedText)).not().isVisible();
+}
+
+@Then("the page title should not be {string}")
+public void verifyPageTitleNot(String unexpectedTitle) {
+    System.out.println("Verifying page title is NOT: " + unexpectedTitle);
+    assertThat(page).hasTitle(new Regex("^(?!.*" + Pattern.quote(unexpectedTitle) + ").*$"));
+}
+
+@Then("the order details area with ID {string} should be empty")
+public void verifyOrderDetailsAreaEmpty(String id) {
+    System.out.println("Verifying order details area " + id + " is empty.");
+    assertThat(page.locator("#" + id)).hasText("");
+}
+
+@Then("the {string} dropdown should contain option {string}")
+public void verifyDropdownOption(String dropdownId, String optionText) {
+    System.out.println("Verifying dropdown " + dropdownId + " contains option: " + optionText);
+    assertThat(page.locator("#" + dropdownId).locator("option:has-text('" + optionText + "')")).isVisible();
 }
 
 @Then("I should see a prominent title like {string}")
-public void verifyProminentTitle(String titleText) {
-    System.out.println("Executing: I should see a prominent title like " + titleText);
-    assertThat(page.locator("h1:has-text('" + titleText + "')")).isVisible();
+public void verifyProminentTitle(String expectedTitle) {
+    System.out.println("Verifying prominent title: " + expectedTitle);
+    assertThat(page.locator("h1")).isVisible();
+    assertThat(page.locator("h1")).containsText(expectedTitle);
 }
 
-@Then("And I should see a {string} button with ID {string}")
-public void verifySearchButtonWithId(String buttonText, String buttonId) {
-    System.out.println("Executing: I should see a " + buttonText + " button with ID " + buttonId);
-    assertThat(page.locator("#" + buttonId)).isVisible();
-    assertThat(page.locator("#" + buttonId)).hasText(buttonText);
+@Then("I should see a designated area for order details with ID {string}")
+public void verifyOrderDetailsArea(String id) {
+    System.out.println("Verifying order details area with ID: " + id);
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Then("And I should see an input field with ID {string} and placeholder {string}")
-public void verifyInputFieldWithIdAndPlaceholder(String inputId, String placeholderText) {
-    System.out.println("Executing: I should see an input field with ID " + inputId + " and placeholder " + placeholderText);
-    assertThat(page.locator("#" + inputId)).isVisible();
-    assertThat(page.locator("#" + inputId)).hasAttribute("placeholder", placeholderText);
+@Then("I should see a designated area for display status with ID {string}")
+public void verifyDisplayStatusArea(String id) {
+    System.out.println("Verifying display status area with ID: " + id);
+    assertThat(page.locator("#" + id)).isVisible();
+}
+
+@Then("the display status area with ID {string} should be visible")
+public void verifyDisplayStatusAreaVisible(String id) {
+    System.out.println("Verifying display status area " + id + " is visible.");
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
 }
