@@ -21,34 +21,57 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("User is on the order tracking page")
-public void userIsOnOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
-    page.navigate("http://127.0.0.1:8088/order/tracking");
+@Then("The {string} input field should be visible")
+public void theInputFieldShouldBeVisible(String fieldLabel) {
+    System.out.println("Executing: The " + fieldLabel + " input field should be visible");
+    if (fieldLabel.equals("Order Number")) {
+        assertThat(page.locator("#order_no")).isVisible();
+        assertThat(page.locator("label:has-text('Order Number')")).isVisible();
+    }
+
+@Then("The {string} input field should be empty")
+public void theInputFieldShouldBeEmpty(String fieldLabel) {
+    System.out.println("Executing: The " + fieldLabel + " input field should be empty");
+    if (fieldLabel.equals("Order Number")) {
+        assertThat(page.locator("#order_no")).isEmpty();
+    }
+
+@Then("The {string} button should be enabled")
+public void theButtonShouldBeEnabled(String buttonText) {
+    System.out.println("Executing: The " + buttonText + " button should be enabled");
+    assertThat(page.locator("button:has-text('" + buttonText + "')")).isEnabled();
 }
 
-@When("User clicks the Track Order button")
-public void userClicksTrackOrderButton() {
-    System.out.println("Executing: User clicks the Track Order button");
-    page.locator("button:has-text('Track Order')").click();
+@Then("The page title should contain {string}")
+public void thePageTitleShouldContain(String expectedTitlePart) {
+    System.out.println("Executing: The page title should contain " + expectedTitlePart);
+    assertThat(page).hasTitle(new Regex(".*" + expectedTitlePart + ".*"));
 }
 
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo);
-    page.locator("#order_no").fill(orderNo);
+@Then("The {string} button should be visible")
+public void theButtonShouldBeVisible(String buttonText) {
+    System.out.println("Executing: The " + buttonText + " button should be visible");
+    assertThat(page.locator("button:has-text('" + buttonText + "')")).isVisible();
 }
 
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedError) {
-    System.out.println("Executing: The error message should display " + expectedError);
-    assertThat(page.locator(".result")).containsText(expectedError);
+@Then("The search results area should be visible and empty")
+public void theSearchResultsAreaShouldBeVisibleAndEmpty() {
+    System.out.println("Executing: The search results area should be visible and empty");
+    assertThat(page.locator(".result")).isVisible();
+    assertThat(page.locator(".result")).isEmpty();
 }
 
-@Then("The order status should display {string}")
-public void theOrderStatusShouldDisplay(String expectedStatus) {
-    System.out.println("Executing: The order status should display " + expectedStatus);
-    assertThat(page.locator(".result")).containsText(expectedStatus);
+@Given("User navigates to the Order Search page")
+public void userNavigatesToOrderSearchPage() {
+    System.out.println("Executing: User navigates to the Order Search page");
+    page.navigate("http://localhost:7070/");
 }
+
+@Then("There should be exactly one {string} input field")
+public void thereShouldBeExactlyOneInputField(String fieldLabel) {
+    System.out.println("Executing: There should be exactly one " + fieldLabel + " input field");
+    if (fieldLabel.equals("Order Number")) {
+        assertThat(page.locator("#order_no")).hasCount(1);
+    }
 
 }
