@@ -21,28 +21,59 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("Page title should contain {string}")
-public void verifyPageTitle(String expectedTitlePart) {
-    System.out.println("Executing: Page title should contain " + expectedTitlePart);
-    assertThat(page).hasTitle(new Regex(".*" + expectedTitlePart + ".*"));
+@Then("the input field with ID {string} should have placeholder {string}")
+public void verifyInputFieldPlaceholder(String id, String placeholder) {
+    System.out.println("Executing: the input field with ID " + id + " should have placeholder " + placeholder);
+    assertThat(page.locator("#" + id)).hasAttribute("placeholder", placeholder);
 }
 
-@Then("The dropdown with ID {string} should contain option {string}")
-public void verifyDropdownOption(String id, String optionText) {
-    System.out.println("Executing: The dropdown with ID " + id + " should contain option " + optionText);
-    assertThat(page.locator("#" + id + " option:has-text('" + optionText + "')")).isVisible();
+@Then("I should see a dropdown with ID {string}")
+public void verifyDropdownWithId(String id) {
+    System.out.println("Executing: I should see a dropdown with ID " + id);
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Given("User navigates to the Order Quest page")
-public void navigateToOrderQuestPage() {
-    System.out.println("Executing: User navigates to the Order Quest page");
-    page.navigate("http://localhost:7070");
+@Then("I should see a section with ID {string}")
+public void verifySectionWithId(String id) {
+    System.out.println("Executing: I should see a section with ID " + id);
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@When("User inspects the search type dropdown")
-public void inspectSearchTypeDropdown() {
-    System.out.println("Executing: User inspects the search type dropdown");
-    // No specific action needed, just setting context for subsequent 'Then' steps
+@Then("I should see an input field with ID {string}")
+public void verifyInputFieldWithId(String id) {
+    System.out.println("Executing: I should see an input field with ID " + id);
+    assertThat(page.locator("#" + id)).isVisible();
+}
+
+@Then("I should see the page title {string}")
+public void verifyPageTitle(String title) {
+    System.out.println("Executing: I should see the page title " + title);
+    assertThat(page.locator("h1")).containsText(title);
+}
+
+@Then("I should see a button with ID {string} and text {string}")
+public void verifyButtonWithIdAndText(String id, String text) {
+    System.out.println("Executing: I should see a button with ID " + id + " and text " + text);
+    assertThat(page.locator("#" + id)).isVisible();
+    assertThat(page.locator("#" + id)).hasText(text);
+}
+
+@Then("the dropdown with ID {string} should have option {string}")
+public void verifyDropdownOption(String dropdownId, String optionText) {
+    System.out.println("Executing: the dropdown with ID " + dropdownId + " should have option " + optionText);
+    assertThat(page.locator("#" + dropdownId).locator("option:has-text('" + optionText + "')")).isVisible();
+}
+
+@Given("I navigate to {string}")
+public void navigateToUrl(String url) {
+    System.out.println("Executing: I navigate to " + url);
+    page.navigate(url);
+}
+
+@Then("the section with ID {string} should be empty")
+public void verifySectionIsEmpty(String id) {
+    System.out.println("Executing: the section with ID " + id + " should be empty");
+    assertThat(page.locator("#" + id)).hasText("");
 }
 
 }
