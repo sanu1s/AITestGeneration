@@ -21,29 +21,4 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("I am on the OrderQuest page")
-    public void iAmOnTheOrderQuestPage() {
-        System.out.println("Executing: I am on the OrderQuest page");
-        page.navigate("http://localhost:7070");
-    }
-
-@Then("I should see the title {string}")
-    public void iShouldSeeTheTitle(String expectedTitle) {
-        System.out.println("Executing: I should see the title " + expectedTitle);
-        assertThat(page.locator("h1")).containsText(expectedTitle);
-    }
-
-@When("I select {string} from the search type dropdown")
-    public void iSelectFromTheSearchTypeDropdown(String optionText) {
-        System.out.println("Executing: I select " + optionText + " from the search type dropdown");
-        page.locator("#searchType").selectOption(optionText);
-    }
-
-@Then("I should see an input field with placeholder {string}")
-    public void iShouldSeeAnInputFieldWithPlaceholder(String expectedPlaceholder) {
-        System.out.println("Executing: I should see an input field with placeholder " + expectedPlaceholder);
-        assertThat(page.locator("#orderIdInput")).isVisible();
-        assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
-    }
-
 }
