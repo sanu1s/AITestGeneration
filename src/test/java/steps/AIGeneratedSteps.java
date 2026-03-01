@@ -21,69 +21,28 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see an empty area for search results")
-public void iShouldSeeAnEmptyAreaForSearchResults() {
-    System.out.println("Executing: I should see an empty area for search results");
-    assertThat(page.locator("#orderDetails")).isVisible();
-    assertThat(page.locator("#orderDetails")).isEmpty();
+@Then("Page title should contain {string}")
+public void verifyPageTitle(String expectedTitlePart) {
+    System.out.println("Executing: Page title should contain " + expectedTitlePart);
+    assertThat(page).hasTitle(new Regex(".*" + expectedTitlePart + ".*"));
 }
 
-@Given("I am on the Order Quest page")
-public void iAmOnTheOrderQuestPage() {
-    System.out.println("Executing: I am on the Order Quest page");
+@Then("The dropdown with ID {string} should contain option {string}")
+public void verifyDropdownOption(String id, String optionText) {
+    System.out.println("Executing: The dropdown with ID " + id + " should contain option " + optionText);
+    assertThat(page.locator("#" + id + " option:has-text('" + optionText + "')")).isVisible();
+}
+
+@Given("User navigates to the Order Quest page")
+public void navigateToOrderQuestPage() {
+    System.out.println("Executing: User navigates to the Order Quest page");
     page.navigate("http://localhost:7070");
 }
 
-@Then("I should see the page title {string}")
-public void iShouldSeeThePageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the page title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
-}
-
-@Then("I should see a search type dropdown with {string} selected")
-public void iShouldSeeASearchTypeDropdownWithSelected(String selectedOption) {
-    System.out.println("Executing: I should see a search type dropdown with " + selectedOption + " selected");
-    assertThat(page.locator("#searchType")).isVisible();
-    assertThat(page.locator("#searchType")).hasValue(selectedOption);
-}
-
-@Then("I should see a {string} button")
-public void iShouldSeeAButton(String buttonText) {
-    System.out.println("Executing: I should see a " + buttonText + " button");
-    assertThat(page.locator("#searchBtn")).isVisible();
-    assertThat(page.locator("#searchBtn")).hasText(buttonText);
-}
-
-@Then("I should see a prominent heading {string}")
-public void iShouldSeeAProminentHeading(String expectedHeading) {
-    System.out.println("Executing: I should see a prominent heading " + expectedHeading);
-    assertThat(page.locator("h1")).isVisible();
-    assertThat(page.locator("h1")).containsText(expectedHeading);
-}
-
-@Then("I should see an input field with placeholder {string}")
-public void iShouldSeeAnInputFieldWithPlaceholder(String placeholder) {
-    System.out.println("Executing: I should see an input field with placeholder " + placeholder);
-    assertThat(page.locator("#orderIdInput")).isVisible();
-    assertThat(page.locator("#orderIdInput")).hasPlaceholder(placeholder);
-}
-
-@When("I select {string} from the search type dropdown")
-public void iSelectFromTheSearchTypeDropdown(String option) {
-    System.out.println("Executing: I select " + option + " from the search type dropdown");
-    page.locator("#searchType").selectOption(option);
-}
-
-@Then("the input field placeholder should remain {string}")
-public void theInputFieldPlaceholderShouldRemain(String placeholder) {
-    System.out.println("Executing: the input field placeholder should remain " + placeholder);
-    assertThat(page.locator("#orderIdInput")).hasPlaceholder(placeholder);
-}
-
-@Then("the search type dropdown should display {string} as selected")
-public void theSearchTypeDropdownShouldDisplayAsSelected(String selectedOption) {
-    System.out.println("Executing: the search type dropdown should display " + selectedOption + " as selected");
-    assertThat(page.locator("#searchType")).hasValue(selectedOption);
+@When("User inspects the search type dropdown")
+public void inspectSearchTypeDropdown() {
+    System.out.println("Executing: User inspects the search type dropdown");
+    // No specific action needed, just setting context for subsequent 'Then' steps
 }
 
 }
