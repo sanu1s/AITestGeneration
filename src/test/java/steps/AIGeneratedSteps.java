@@ -22,76 +22,67 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see the prominent title {string}")
-    public void shouldSeeProminentTitle(String title) {
-        System.out.println("Executing: I should see the prominent title " + title);
-        assertThat(page.locator("h1")).isVisible();
-        assertThat(page.locator("h1")).containsText(title);
+@And("the {string} dropdown should contain option {string}")
+    public void dropdownShouldContainOption(String dropdownId, String optionText) {
+        System.out.println("Executing: the " + dropdownId + " dropdown should contain option " + optionText);
+        assertThat(page.locator("select#" + dropdownId + " option").filter(new Locator.FilterOptions().setHasText(optionText))).isVisible();
     }
 
-@Given("I open the OrderQuest application page")
-    public void openOrderQuestApplicationPage() {
-        System.out.println("Executing: I open the OrderQuest application page");
+@And("the input field with ID {string} should have placeholder {string}")
+    public void inputFieldShouldHavePlaceholder(String inputId, String placeholderText) {
+        System.out.println("Executing: the input field with ID " + inputId + " should have placeholder " + placeholderText);
+        assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", placeholderText);
+    }
+
+@Then("I should see the page title containing {string}")
+    public void shouldSeePageTitleContaining(String titlePartialText) {
+        System.out.println("Executing: I should see the page title containing " + titlePartialText);
+        assertThat(page).hasTitle(Pattern.compile(titlePartialText));
+    }
+
+@Then("I should see an input field with ID {string}")
+    public void shouldSeeInputFieldWithId(String inputId) {
+        System.out.println("Executing: I should see an input field with ID " + inputId);
+        assertThat(page.locator("input#" + inputId)).isVisible();
+    }
+
+@And("I should see a dropdown with ID {string}")
+    public void shouldSeeDropdownWithId(String dropdownId) {
+        System.out.println("Executing: I should see a dropdown with ID " + dropdownId);
+        assertThat(page.locator("select#" + dropdownId)).isVisible();
+    }
+
+@And("I should see an empty search results area with ID {string}")
+    public void shouldSeeEmptySearchResultsAreaWithId(String areaId) {
+        System.out.println("Executing: I should see an empty search results area with ID " + areaId);
+        assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isVisible();
+        assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isEmpty(); // Asserts it contains no elements
+    }
+
+@And("I should see an empty status display area with ID {string}")
+    public void shouldSeeEmptyStatusDisplayAreaWithId(String areaId) {
+        System.out.println("Executing: I should see an empty status display area with ID " + areaId);
+        assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isVisible();
+        assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isEmpty(); // Asserts it contains no elements
+    }
+
+@And("I should see a button with ID {string} and text {string}")
+    public void shouldSeeButtonWithIdAndText(String buttonId, String buttonText) {
+        System.out.println("Executing: I should see a button with ID " + buttonId + " and text " + buttonText);
+        assertThat(page.locator("button#" + buttonId)).isVisible();
+        assertThat(page.locator("button#" + buttonId)).hasText(buttonText);
+    }
+
+@Given("I navigate to the OrderQuest application")
+    public void navigateToOrderQuestApplication() {
+        System.out.println("Executing: I navigate to the OrderQuest application");
         page.navigate("http://localhost:7070");
-        assertThat(page).hasURL("http://localhost:7070/");
     }
 
-@And("the search type dropdown should contain the option {string}")
-    public void searchTypeDropdownShouldContainOption(String optionText) {
-        System.out.println("Executing: the search type dropdown should contain the option " + optionText);
-        assertThat(page.locator("#searchType option:has-text(" + Pattern.quote(optionText) + ")")).isVisible();
-    }
-
-@And("I should see a {string} button with ID {string}")
-    public void shouldSeeButtonWithId(String buttonText, String id) {
-        System.out.println("Executing: I should see a " + buttonText + " button with ID " + id);
-        assertThat(page.locator("#" + id)).isVisible();
-        assertThat(page.locator("#" + id)).containsText(buttonText);
-    }
-
-@Given("I navigate to the OrderQuest page")
-    public void navigateToOrderQuestPage() {
-        System.out.println("Executing: I navigate to the OrderQuest page");
-        page.navigate("http://localhost:7070");
-        assertThat(page).hasURL("http://localhost:7070/");
-    }
-
-@Then("the search type dropdown with ID {string} should be enabled")
-    public void searchTypeDropdownShouldBeEnabled(String id) {
-        System.out.println("Executing: the search type dropdown with ID " + id + " should be enabled");
-        assertThat(page.locator("#" + id)).isEnabled();
-    }
-
-@And("I should see a search type selection dropdown with ID {string}")
-    public void shouldSeeSearchTypeDropdown(String id) {
-        System.out.println("Executing: I should see a search type selection dropdown with ID " + id);
-        assertThat(page.locator("#" + id)).isVisible();
-    }
-
-@And("the {string} button with ID {string} should be enabled")
-    public void buttonShouldBeEnabled(String buttonText, String id) {
-        System.out.println("Executing: the " + buttonText + " button with ID " + id + " should be enabled");
-        assertThat(page.locator("#" + id)).isEnabled();
-    }
-
-@And("I should see an empty search results display area with ID {string}")
-    public void shouldSeeEmptySearchResultsDisplayArea(String id) {
-        System.out.println("Executing: I should see an empty search results display area with ID " + id);
-        assertThat(page.locator("#" + id)).isVisible();
-        assertThat(page.locator("#" + id)).isEmpty();
-    }
-
-@And("the input field with ID {string} should be enabled")
-    public void inputFieldShouldBeEnabled(String id) {
-        System.out.println("Executing: the input field with ID " + id + " should be enabled");
-        assertThat(page.locator("#" + id)).isEnabled();
-    }
-
-@And("I should see an input field with ID {string} and placeholder {string}")
-    public void shouldSeeInputFieldWithIdAndPlaceholder(String id, String placeholder) {
-        System.out.println("Executing: I should see an input field with ID " + id + " and placeholder " + placeholder);
-        assertThat(page.locator("#" + id)).isVisible();
-        assertThat(page.locator("#" + id)).hasAttribute("placeholder", placeholder);
+@And("I should not see any error message area with ID {string} initially")
+    public void shouldNotSeeErrorMessageAreaWithIdInitially(String errorId) {
+        System.out.println("Executing: I should not see any error message area with ID " + errorId + " initially");
+        assertThat(page.locator("div#" + errorId + ", section#" + errorId)).not(isVisible());
     }
 
 }
