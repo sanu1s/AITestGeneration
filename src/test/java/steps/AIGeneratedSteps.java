@@ -21,28 +21,68 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see the title {string}")
-public void verifyTitle(String titleText) {
-    System.out.println("Executing: I should see the title " + titleText);
-    assertThat(page.locator("h1")).containsText(titleText);
+@Then("I should still see the {string} button")
+public void shouldStillSeeTheButton(String buttonText) {
+    System.out.println("Executing: I should still see the " + buttonText + " button");
+    assertThat(page.locator("#searchBtn")).isVisible();
+    assertThat(page.locator("#searchBtn")).hasText(buttonText);
 }
 
-@Then("the input field {string} should have placeholder {string}")
-public void verifyInputFieldPlaceholder(String inputId, String placeholderText) {
-    System.out.println("Executing: the input field " + inputId + " should have placeholder " + placeholderText);
-    assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", placeholderText);
+@Then("I should see the title {string}")
+public void shouldSeeTitle(String title) {
+    System.out.println("Executing: I should see the title " + title);
+    assertThat(page.locator("h1, text=" + Pattern.quote(title))).isVisible();
+}
+
+@Then("I should see the input field with placeholder {string}")
+public void shouldSeeInputFieldWithPlaceholder(String placeholder) {
+    System.out.println("Executing: I should see an input field with placeholder " + placeholder);
+    assertThat(page.locator("#orderIdInput")).isVisible();
+    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholder);
 }
 
 @Given("I navigate to the OrderQuest page")
 public void navigateToOrderQuestPage() {
     System.out.println("Executing: I navigate to the OrderQuest page");
     page.navigate("http://localhost:7070");
+    assertThat(page).hasURL("http://localhost:7070/");
 }
 
-@When("I select {string} from the {string} dropdown")
-public void selectFromDropdown(String optionText, String dropdownId) {
-    System.out.println("Executing: I select " + optionText + " from the " + dropdownId + " dropdown");
-    page.locator("select#" + dropdownId).selectOption(optionText);
+@Then("I should see a {string} button")
+public void shouldSeeButton(String buttonText) {
+    System.out.println("Executing: I should see a " + buttonText + " button");
+    assertThat(page.locator("#searchBtn")).isVisible();
+    assertThat(page.locator("#searchBtn")).hasText(buttonText);
+}
+
+@Then("I should see an empty search results area")
+public void shouldSeeEmptySearchResultsArea() {
+    System.out.println("Executing: I should see an empty search results area");
+    assertThat(page.locator("#orderDetails")).isVisible();
+    assertThat(page.locator("#orderDetails")).hasText("");
+    assertThat(page.locator("#displayStatus")).isVisible();
+    assertThat(page.locator("#displayStatus")).hasText("");
+}
+
+@Then("I should see an input field with placeholder {string}")
+public void shouldSeeInputFieldWithPlaceholder_7(String placeholder) {
+    System.out.println("Executing: I should see an input field with placeholder " + placeholder);
+    assertThat(page.locator("#orderIdInput")).isVisible();
+    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholder);
+}
+
+@When("I select {string} from the search type dropdown")
+public void selectFromSearchTypeDropdown(String option) {
+    System.out.println("Executing: I select " + option + " from the search type dropdown");
+    page.locator("#searchType").selectOption(option);
+}
+
+@Then("I should see a dropdown with options {string} and {string}")
+public void shouldSeeDropdownWithOptions(String option1, String option2) {
+    System.out.println("Executing: I should see a dropdown with options " + option1 + " and " + option2);
+    assertThat(page.locator("#searchType")).isVisible();
+    assertThat(page.locator("#searchType")).containsText(option1);
+    assertThat(page.locator("#searchType")).containsText(option2);
 }
 
 }
