@@ -22,16 +22,38 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see a dropdown with ID {string}")
-public void verifyDropdownById(String id) {
-    System.out.println("Executing: I should see a dropdown with ID " + id);
-    assertThat(page.locator("select#" + id)).isVisible();
+@Then("I should see a search type selector with {string} as the default option")
+public void verifySearchTypeSelectorDefaultOption(String defaultOption) {
+    System.out.println("Executing: I should see a search type selector with " + defaultOption + " as the default option");
+    assertThat(page.locator("#searchType")).isVisible();
+    assertThat(page.locator("#searchType")).hasValue(defaultOption);
 }
 
-@Then("I should see an input field with ID {string}")
-public void verifyInputFieldById(String id) {
-    System.out.println("Executing: I should see an input field with ID " + id);
-    assertThat(page.locator("input#" + id)).isVisible();
+@Then("I should see an empty area for displaying search results")
+public void verifyEmptySearchResultsArea() {
+    System.out.println("Executing: I should see an empty area for displaying search results");
+    // Verify that the result display areas are initially hidden or empty
+    assertThat(page.locator("#orderDetails")).isHidden();
+    assertThat(page.locator("#displayStatus")).isHidden();
+    assertThat(page.locator("#error")).isHidden();
+}
+
+@When("I select {string} from the search type selector")
+public void selectSearchType(String option) {
+    System.out.println("Executing: I select " + option + " from the search type selector");
+    page.locator("#searchType").selectOption(option);
+}
+
+@Then("I should see the title {string}")
+public void verifyPageTitle(String expectedTitle) {
+    System.out.println("Executing: I should see the title " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
+}
+
+@Then("the search type selector should display {string}")
+public void verifySearchTypeSelectorDisplay(String expectedDisplay) {
+    System.out.println("Executing: the search type selector should display " + expectedDisplay);
+    assertThat(page.locator("#searchType")).hasValue(expectedDisplay);
 }
 
 @Given("I navigate to the OrderQuest page")
@@ -40,48 +62,18 @@ public void navigateToOrderQuestPage() {
     page.navigate("http://localhost:7070");
 }
 
-@Then("I should see an empty designated area for search results with ID {string}")
-public void verifyEmptyResultAreaById(String id) {
-    System.out.println("Executing: I should see an empty designated area for search results with ID " + id);
-    assertThat(page.locator("#" + id)).isVisible();
-    assertThat(page.locator("#" + id)).isEmpty();
+@Then("I should see a {string} button")
+public void verifySearchButton(String buttonText) {
+    System.out.println("Executing: I should see a " + buttonText + " button");
+    assertThat(page.locator("#searchBtn")).isVisible();
+    assertThat(page.locator("#searchBtn")).hasText(buttonText);
 }
 
-@Then("I should see a {string} button with ID {string}")
-public void verifyButtonById(String buttonText, String id) {
-    System.out.println("Executing: I should see a " + buttonText + " button with ID " + id);
-    assertThat(page.locator("button#" + id)).isVisible();
-    assertThat(page.locator("button#" + id)).hasText(buttonText);
-}
-
-@Then("And the {string} dropdown should be selected with {string}")
-public void verifyDropdownSelectedValue(String id, String expectedValue) {
-    System.out.println("Executing: The " + id + " dropdown should be selected with " + expectedValue);
-    assertThat(page.locator("select#" + id)).hasText(Pattern.compile(Pattern.quote(expectedValue)));
-}
-
-@Then("And the {string} field should have placeholder {string}")
-public void verifyInputFieldPlaceholder(String id, String expectedPlaceholder) {
-    System.out.println("Executing: The " + id + " field should have placeholder " + expectedPlaceholder);
-    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", expectedPlaceholder);
-}
-
-@Then("the {string} field should have placeholder {string}")
-public void verifyInputFieldPlaceholder_8(String id, String expectedPlaceholder) {
-    System.out.println("Executing: The " + id + " field should have placeholder " + expectedPlaceholder);
-    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", expectedPlaceholder);
-}
-
-@Then("I should see a prominent title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see a prominent title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
-}
-
-@When("I select {string} from the {string} dropdown")
-public void selectFromDropdown(String optionText, String dropdownId) {
-    System.out.println("Executing: I select " + optionText + " from the " + dropdownId + " dropdown");
-    page.locator("select#" + dropdownId).selectOption(optionText);
+@Then("I should see an input field with placeholder {string}")
+public void verifyInputFieldWithPlaceholder(String placeholder) {
+    System.out.println("Executing: I should see an input field with placeholder " + placeholder);
+    assertThat(page.locator("#orderIdInput")).isVisible();
+    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholder);
 }
 
 }
