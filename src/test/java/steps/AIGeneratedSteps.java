@@ -26,42 +26,55 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("The order details should be displayed for order {string}")
-public void theOrderDetailsShouldBeDisplayedForOrder(String orderId) {
-    System.out.println("Executing: The order details should be displayed for order " + orderId);
-    assertThat(page.locator("#orderDetails")).isVisible();
-    assertThat(page.locator("#orderDetails")).containsText("Order ID: " + orderId);
+@Then("I should see a designated, empty area for displaying search results")
+public void iShouldSeeADesignatedEmptyAreaForDisplayingSearchResults() {
+    System.out.println("Executing: I should see a designated, empty area for displaying search results");
+    // Assuming a common ID or class for the results area, e.g., #searchResults or .results-container
+    // As no specific UI structure was provided, we'll use a likely generic selector
+    // and assert it's visible and initially empty.
+    // If a specific ID/class were provided, it would be used here.
+    assertThat(page.locator("#searchResults, .results-container")).isVisible();
+    assertThat(page.locator("#searchResults, .results-container")).isEmpty();
 }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Executing: User clicks the " + buttonText + " button");
-    page.locator("#searchBtn").click();
-}
-
-@Given("User is on the order tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Executing: User is on the order tracking page");
+@Given("I navigate to {string}")
+public void iNavigateTo(String url) {
+    System.out.println("Executing: I navigate to " + url);
+    // CRITICAL: Using the validation URL as per instructions, not the Gherkin URL
     page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
-@When("User enters order number {string} in the order ID input")
-public void userEntersOrderNumberInTheOrderIdInput(String orderNo) {
-    System.out.println("Executing: User enters order number " + orderNo + " in the order ID input");
-    page.locator("#orderIdInput").fill(orderNo);
+@Then("I should see a prominent title {string}")
+public void iShouldSeeAProminentTitle(String expectedTitle) {
+    System.out.println("Executing: I should see a prominent title " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("The error message {string} should be displayed")
-public void theErrorMessageShouldBeDisplayed(String errorMessage) {
-    System.out.println("Executing: The error message " + errorMessage + " should be displayed");
-    assertThat(page.locator("#error")).isVisible();
-    assertThat(page.locator("#error")).containsText(errorMessage);
+@Then("I should see an input field clearly labeled {string}")
+public void iShouldSeeAnInputFieldClearlyLabeled(String label) {
+    System.out.println("Executing: I should see an input field clearly labeled " + label);
+    // Assuming input fields are associated with their labels, or have placeholders matching the label
+    assertThat(page.getByLabel(label)).isVisible();
+    assertThat(page.getByLabel(label)).isEnabled();
 }
 
-@When("User selects {string} from the search type dropdown")
-public void userSelectsFromSearchTypeDropdown(String searchType) {
-    System.out.println("Executing: User selects " + searchType + " from the search type dropdown");
-    page.locator("#searchType").selectOption(searchType);
+@Then("I should see a {string} button that can trigger a search action")
+public void iShouldSeeAButtonThatCanTriggerASearchAction(String buttonText) {
+    System.out.println("Executing: I should see a " + buttonText + " button that can trigger a search action");
+    assertThat(page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName(buttonText))).isVisible();
+    assertThat(page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName(buttonText))).isEnabled();
+}
+
+@When("I enter {string} into the {string} field")
+public void iEnterIntoTheField(String text, String fieldLabel) {
+    System.out.println("Executing: I enter " + text + " into the " + fieldLabel + " field");
+    page.getByLabel(fieldLabel).fill(text);
+}
+
+@Then("The {string} field should contain {string}")
+public void theFieldShouldContain(String fieldLabel, String expectedText) {
+    System.out.println("Executing: The " + fieldLabel + " field should contain " + expectedText);
+    assertThat(page.getByLabel(fieldLabel)).hasValue(expectedText);
 }
 
 }
