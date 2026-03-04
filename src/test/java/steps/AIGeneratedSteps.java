@@ -26,60 +26,51 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("I am on the OrderQuest page")
-    public void iAmOnTheOrderQuestPage() {
-        System.out.println("Executing: I am on the OrderQuest page");
-        page.navigate("http://orderquest.com:7070/");
+@Then("I should see a search type dropdown with ID {string}")
+    public void iShouldSeeASearchTypeDropdownWithID(String dropdownId) {
+        System.out.println("Executing: I should see a search type dropdown with ID " + dropdownId);
+        PlaywrightAssertions.assertThat(page.locator("select#" + dropdownId)).isVisible();
     }
 
-@Then("I should see a search type dropdown with options {string} and {string}")
-    public void iShouldSeeASearchTypeDropdownWithOptionsAnd(String option1, String option2) {
-        System.out.println("Executing: I should see a search type dropdown with options " + option1 + " and " + option2);
-        assertThat(page.locator("#searchType")).isVisible();
-        List<String> actualOptions = page.locator("#searchType").evaluate("el => Array.from(el.options).map(o => o.text)");
-        assertEquals(2, actualOptions.size());
-        assertEquals(option1, actualOptions.get(0));
-        assertEquals(option2, actualOptions.get(1));
+@Then("I should see an empty display area with ID {string}")
+    public void iShouldSeeAnEmptyDisplayAreaWithID(String areaId) {
+        System.out.println("Executing: I should see an empty display area with ID " + areaId);
+        PlaywrightAssertions.assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isVisible();
+        PlaywrightAssertions.assertThat(page.locator("div#" + areaId + ", section#" + areaId)).hasText("");
     }
 
-@Then("I should see the page title {string}")
-    public void iShouldSeeThePageTitle(String expectedTitle) {
-        System.out.println("Executing: I should see the page title " + expectedTitle);
-        assertThat(page).hasTitle(expectedTitle);
+@Given("I am on the OrderQuest homepage")
+    public void iAmOnTheOrderQuestHomepage() {
+        System.out.println("Executing: I am on the OrderQuest homepage");
+        page.navigate("http://orderquest.com:7070");
     }
 
-@Then("I should see a {string} button")
-    public void iShouldSeeAButton(String buttonText) {
-        System.out.println("Executing: I should see a " + buttonText + " button");
-        assertThat(page.locator("#searchBtn")).isVisible();
-        assertThat(page.locator("#searchBtn")).hasText(buttonText);
+@Then("I should see an input field with ID {string} and placeholder {string}")
+    public void iShouldSeeAnInputFieldWithIDAndPlaceholder(String inputId, String placeholderText) {
+        System.out.println("Executing: I should see an input field with ID " + inputId + " and placeholder " + placeholderText);
+        PlaywrightAssertions.assertThat(page.locator("input#" + inputId)).isVisible();
+        PlaywrightAssertions.assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", placeholderText);
     }
 
-@Then("I should see an empty search results area")
-    public void iShouldSeeAnEmptySearchResultsArea() {
-        System.out.println("Executing: I should see an empty search results area");
-        // Assert that the element exists but is empty or hidden initially
-        assertThat(page.locator("#orderDetails")).isHidden(); // Assuming it's hidden until results are present
-        assertThat(page.locator("#orderDetails")).isEmpty(); // Verify it's empty if visible, or after it becomes visible
+@Then("I should see a button with ID {string} with text {string}")
+    public void iShouldSeeAButtonWithIDWithText(String buttonId, String buttonText) {
+        System.out.println("Executing: I should see a button with ID " + buttonId + " with text " + buttonText);
+        PlaywrightAssertions.assertThat(page.locator("button#" + buttonId)).isVisible();
+        PlaywrightAssertions.assertThat(page.locator("button#" + buttonId)).hasText(buttonText);
     }
 
-@Then("I should see an input field with placeholder {string}")
-    public void iShouldSeeAnInputFieldWithPlaceholder(String expectedPlaceholder) {
-        System.out.println("Executing: I should see an input field with placeholder " + expectedPlaceholder);
-        assertThat(page.locator("#orderIdInput")).isVisible();
-        assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
+@Then("I should see the page title as {string}")
+    public void iShouldSeeThePageTitleAs(String expectedTitle) {
+        System.out.println("Executing: I should see the page title as " + expectedTitle);
+        PlaywrightAssertions.assertThat(page).hasTitle(expectedTitle);
     }
 
-@Then("the search results area should not be visible")
-    public void theSearchResultsAreaShouldNotBeVisible() {
-        System.out.println("Executing: The search results area should not be visible");
-        assertThat(page.locator("#orderDetails")).isHidden();
-    }
-
-@Then("the search results area should be empty")
-    public void theSearchResultsAreaShouldBeEmpty() {
-        System.out.println("Executing: The search results area should be empty");
-        assertThat(page.locator("#orderDetails")).isEmpty();
+@Then("the {string} dropdown should contain options {string} and {string}")
+    public void theDropdownShouldContainOptions(String dropdownId, String option1, String option2) {
+        System.out.println("Executing: The dropdown " + dropdownId + " should contain options " + option1 + " and " + option2);
+        List<String> expectedOptions = Arrays.asList(option1, option2);
+        List<String> actualOptions = page.locator("select#" + dropdownId + " option").allTextContents();
+        assertEquals(expectedOptions, actualOptions);
     }
 
 }
