@@ -22,62 +22,42 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("the input field with ID {string} should have placeholder {string}")
-public void verifyInputFieldPlaceholder(String id, String placeholder) {
-    System.out.println("Executing: The input field with ID " + id + " should have placeholder " + placeholder);
-    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", placeholder);
+@When("User clicks the {string} button")
+public void userClicksTheButton(String buttonText) {
+    System.out.println("Clicking button: " + buttonText);
+    page.locator("#searchBtn").click();
 }
 
-@Then("I should see option {string} in the dropdown")
-public void verifyOptionInDropdown(String optionText) {
-    System.out.println("Executing: I should see option " + optionText + " in the dropdown");
-    // Verify that an option with the given text exists and is visible within the select element.
-    assertThat(page.locator("select#searchType").locator("option").filter(new Locator.Filter().setHasText(optionText))).isVisible();
+@When("User selects {string} as search type")
+public void userSelectsSearchType(String searchType) {
+    System.out.println("Selecting search type: " + searchType);
+    page.locator("#searchType").selectOption(searchType);
 }
 
-@Then("I should see a dropdown with ID {string}")
-public void verifyDropdownWithId(String id) {
-    System.out.println("Executing: I should see a dropdown with ID " + id);
-    assertThat(page.locator("select#" + id)).isVisible();
+@Then("The order details for {string} should be displayed")
+public void theOrderDetailsShouldBeDisplayed(String orderId) {
+    System.out.println("Verifying order details for: " + orderId);
+    // Assuming order details are displayed in #orderDetails or #displayStatus
+    // Using #orderDetails as a primary candidate for positive results
+    assertThat(page.locator("#orderDetails")).containsText(orderId);
 }
 
-@Then("I should see the title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
+@When("User enters order ID {string}")
+public void userEntersOrderId(String orderId) {
+    System.out.println("Entering order ID: " + orderId);
+    page.locator("#orderIdInput").fill(orderId);
 }
 
-@Then("I should see an input field with ID {string}")
-public void verifyInputFieldWithId(String id) {
-    System.out.println("Executing: I should see an input field with ID " + id);
-    assertThat(page.locator("input#" + id)).isVisible();
+@Given("User is on the Order Tracking page")
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Navigating to Order Tracking page");
+    page.navigate("http://127.0.0.1:8088/order/tracking");
 }
 
-@Then("I should see an empty designated area with ID {string}")
-public void verifyEmptyDesignatedArea(String id) {
-    System.out.println("Executing: I should see an empty designated area with ID " + id);
-    assertThat(page.locator("div#" + id + ", section#" + id)).isVisible();
-    assertThat(page.locator("div#" + id + ", section#" + id)).hasText("");
-}
-
-@Then("I should see a button with ID {string} with text {string}")
-public void verifyButtonWithIdAndText(String id, String text) {
-    System.out.println("Executing: I should see a button with ID " + id + " with text " + text);
-    assertThat(page.locator("button#" + id)).isVisible();
-    assertThat(page.locator("button#" + id)).hasText(text);
-}
-
-@Given("I navigate to {string}")
-public void navigateToUrl(String url) {
-    System.out.println("Executing: I navigate to " + url);
-    page.navigate(url);
-}
-
-@When("I interact with the dropdown with ID {string}")
-public void interactWithDropdown(String id) {
-    System.out.println("Executing: I interact with the dropdown with ID " + id);
-    // For a select element, options are usually available without an explicit 'interaction' step like a click.
-    // This step serves as a logical grouping for the subsequent assertions.
+@Then("The error message should display {string}")
+public void theErrorMessageShouldDisplay(String expectedErrorMessage) {
+    System.out.println("Verifying error message: " + expectedErrorMessage);
+    assertThat(page.locator("#error")).containsText(expectedErrorMessage);
 }
 
 }
