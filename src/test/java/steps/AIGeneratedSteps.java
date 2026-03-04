@@ -6,6 +6,8 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import io.cucumber.java.en.*;
 import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.List;
 import com.microsoft.playwright.options.SelectOption;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,69 +25,66 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see the title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
+@Then("I should see a designated, empty area for displaying search results")
+public void verifyEmptyResultArea() {
+  System.out.println("Executing: I should see a designated, empty area for displaying search results");
+  assertThat(page.locator("#orderDetails")).isVisible();
+  assertThat(page.locator("#orderDetails")).hasText(""); // Assert it's visible and contains no text
+  assertThat(page.locator("#displayStatus")).isVisible();
+  assertThat(page.locator("#displayStatus")).hasText(""); // Assert it's visible and contains no text
 }
 
-@Then("I should see an empty area for error messages")
-public void verifyEmptyErrorMessagesArea() {
-    System.out.println("Executing: I should see an empty area for error messages");
-    assertThat(page.locator("#error")).isVisible();
-    assertThat(page.locator("#error")).isEmpty();
+@Then("I should see a search type selection dropdown")
+public void verifySearchTypeDropdown() {
+  System.out.println("Executing: I should see a search type selection dropdown");
+  assertThat(page.locator("#searchType")).isVisible();
+}
+
+@Given("I navigate to the OrderQuest page")
+public void navigateToOrderQuestPage() {
+  System.out.println("Executing: I navigate to the OrderQuest page");
+  page.navigate("http://localhost:7070");
 }
 
 @Then("I should see a {string} button")
 public void verifySearchButton(String buttonText) {
-    System.out.println("Executing: I should see a " + buttonText + " button");
-    assertThat(page.locator("#searchBtn")).isVisible();
-    assertThat(page.locator("#searchBtn")).hasText(buttonText);
-}
-
-@Then("I should see the search type dropdown with options {string} and {string}")
-public void verifySearchTypeDropdownOptions(String option1, String option2) {
-    System.out.println("Executing: I should see the search type dropdown with options " + option1 + " and " + option2);
-    assertThat(page.locator("#searchType")).isVisible();
-    assertEquals(Arrays.asList(option1, option2), page.locator("#searchType option").allTextContents());
-}
-
-@Then("I should see an empty area for display status")
-public void verifyEmptyDisplayStatusArea() {
-    System.out.println("Executing: I should see an empty area for display status");
-    assertThat(page.locator("#displayStatus")).isVisible();
-    assertThat(page.locator("#displayStatus")).isEmpty();
+  System.out.println("Executing: I should see a " + buttonText + " button");
+  assertThat(page.locator("#searchBtn")).isVisible();
+  assertThat(page.locator("#searchBtn")).hasText(buttonText);
 }
 
 @Then("I should see an input field with placeholder {string}")
-public void verifyInputFieldPlaceholder(String expectedPlaceholder) {
-    System.out.println("Executing: I should see an input field with placeholder " + expectedPlaceholder);
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
+public void verifyInputFieldWithPlaceholder(String placeholder) {
+  System.out.println("Executing: I should see an input field with placeholder " + placeholder);
+  assertThat(page.locator("#orderIdInput")).isVisible();
+  assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholder);
 }
 
 @When("I select {string} from the search type dropdown")
-public void selectFromSearchTypeDropdown(String option) {
-    System.out.println("Executing: I select " + option + " from the search type dropdown");
-    page.locator("#searchType").selectOption(option);
+public void selectSearchType(String option) {
+  System.out.println("Executing: I select " + option + " from the search type dropdown");
+  page.locator("#searchType").selectOption(option);
 }
 
-@Given("I navigate to {string}")
-public void navigateToUrl(String url) {
-    System.out.println("Executing: I navigate to " + url);
-    page.navigate(url);
+@Then("{string} should be the initially selected search type")
+public void verifyInitiallySelectedSearchType(String expectedOption) {
+  System.out.println("Executing: " + expectedOption + " should be the initially selected search type");
+  String selectedText = (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text");
+  assertEquals(expectedOption, selectedText);
 }
 
-@Then("the {string} option should be selected by default")
-public void verifyDefaultSelectedOption(String defaultOption) {
-    System.out.println("Executing: the " + defaultOption + " option should be selected by default");
-    assertEquals(defaultOption, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
+@Then("I should see a prominent title {string}")
+public void verifyProminentTitle(String expectedTitle) {
+  System.out.println("Executing: I should see a prominent title " + expectedTitle);
+  assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("I should see an empty area for order details")
-public void verifyEmptyOrderDetailsArea() {
-    System.out.println("Executing: I should see an empty area for order details");
-    assertThat(page.locator("#orderDetails")).isVisible();
-    assertThat(page.locator("#orderDetails")).isEmpty();
+@Then("I should see the input field is still present")
+public void verifyInputFieldStillPresent() {
+  System.out.println("Executing: I should see the input field is still present");
+  assertThat(page.locator("#orderIdInput")).isVisible();
+  // Note: The UI structure does not explicitly state a placeholder change for #orderIdInput
+  // when 'Tracking Number' is selected. We only verify the input field remains visible.
 }
 
 }
