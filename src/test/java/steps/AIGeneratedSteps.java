@@ -22,42 +22,66 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("User clicks the {string} button")
-public void userClicksTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("#searchBtn").click();
+@Then("I should see a dropdown with ID {string}")
+public void verifyDropdownById(String id) {
+    System.out.println("Executing: I should see a dropdown with ID " + id);
+    assertThat(page.locator("select#" + id)).isVisible();
 }
 
-@When("User selects {string} as search type")
-public void userSelectsSearchType(String searchType) {
-    System.out.println("Selecting search type: " + searchType);
-    page.locator("#searchType").selectOption(searchType);
+@Then("I should see an input field with ID {string}")
+public void verifyInputFieldById(String id) {
+    System.out.println("Executing: I should see an input field with ID " + id);
+    assertThat(page.locator("input#" + id)).isVisible();
 }
 
-@Then("The order details for {string} should be displayed")
-public void theOrderDetailsShouldBeDisplayed(String orderId) {
-    System.out.println("Verifying order details for: " + orderId);
-    // Assuming order details are displayed in #orderDetails or #displayStatus
-    // Using #orderDetails as a primary candidate for positive results
-    assertThat(page.locator("#orderDetails")).containsText(orderId);
+@Given("I navigate to the OrderQuest page")
+public void navigateToOrderQuestPage() {
+    System.out.println("Executing: I navigate to the OrderQuest page");
+    page.navigate("http://localhost:7070");
 }
 
-@When("User enters order ID {string}")
-public void userEntersOrderId(String orderId) {
-    System.out.println("Entering order ID: " + orderId);
-    page.locator("#orderIdInput").fill(orderId);
+@Then("I should see an empty designated area for search results with ID {string}")
+public void verifyEmptyResultAreaById(String id) {
+    System.out.println("Executing: I should see an empty designated area for search results with ID " + id);
+    assertThat(page.locator("#" + id)).isVisible();
+    assertThat(page.locator("#" + id)).isEmpty();
 }
 
-@Given("User is on the Order Tracking page")
-public void userIsOnTheOrderTrackingPage() {
-    System.out.println("Navigating to Order Tracking page");
-    page.navigate("http://127.0.0.1:8088/order/tracking");
+@Then("I should see a {string} button with ID {string}")
+public void verifyButtonById(String buttonText, String id) {
+    System.out.println("Executing: I should see a " + buttonText + " button with ID " + id);
+    assertThat(page.locator("button#" + id)).isVisible();
+    assertThat(page.locator("button#" + id)).hasText(buttonText);
 }
 
-@Then("The error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedErrorMessage) {
-    System.out.println("Verifying error message: " + expectedErrorMessage);
-    assertThat(page.locator("#error")).containsText(expectedErrorMessage);
+@Then("And the {string} dropdown should be selected with {string}")
+public void verifyDropdownSelectedValue(String id, String expectedValue) {
+    System.out.println("Executing: The " + id + " dropdown should be selected with " + expectedValue);
+    assertThat(page.locator("select#" + id)).hasText(Pattern.compile(Pattern.quote(expectedValue)));
+}
+
+@Then("And the {string} field should have placeholder {string}")
+public void verifyInputFieldPlaceholder(String id, String expectedPlaceholder) {
+    System.out.println("Executing: The " + id + " field should have placeholder " + expectedPlaceholder);
+    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", expectedPlaceholder);
+}
+
+@Then("the {string} field should have placeholder {string}")
+public void verifyInputFieldPlaceholder_8(String id, String expectedPlaceholder) {
+    System.out.println("Executing: The " + id + " field should have placeholder " + expectedPlaceholder);
+    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", expectedPlaceholder);
+}
+
+@Then("I should see a prominent title {string}")
+public void verifyPageTitle(String expectedTitle) {
+    System.out.println("Executing: I should see a prominent title " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
+}
+
+@When("I select {string} from the {string} dropdown")
+public void selectFromDropdown(String optionText, String dropdownId) {
+    System.out.println("Executing: I select " + optionText + " from the " + dropdownId + " dropdown");
+    page.locator("select#" + dropdownId).selectOption(optionText);
 }
 
 }
