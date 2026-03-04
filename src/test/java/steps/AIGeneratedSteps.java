@@ -26,54 +26,40 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see the {string} dropdown with {string} selected by default")
-public void verifySearchTypeDropdownDefaultSelection(String dropdownName, String expectedOption) {
-    System.out.println("Executing: I should see the " + dropdownName + " dropdown with " + expectedOption + " selected by default");
-    assertThat(page.locator("#searchType")).isVisible();
-    assertEquals(expectedOption, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
+@Then("The order details should be displayed in the {string} section")
+public void theOrderDetailsShouldBeDisplayedInTheSection(String sectionId) {
+    System.out.println("Executing: The order details should be displayed in the " + sectionId + " section");
+    assertThat(page.locator("#" + sectionId)).isVisible();
 }
 
-@Then("I should see an empty area for displaying search results")
-public void verifyEmptySearchResultsArea() {
-    System.out.println("Executing: I should see an empty area for displaying search results");
-    // Check if the potential result areas are present and empty or hidden
-    assertThat(page.locator("#orderDetails")).isVisible(); // Assume it's visible but empty
-    assertThat(page.locator("#orderDetails")).hasText("");
-    assertThat(page.locator("#displayStatus")).isVisible(); // Assume it's visible but empty
-    assertThat(page.locator("#displayStatus")).hasText("");
-    assertThat(page.locator("#error")).isHidden(); // Error div should be hidden by default
+@When("User clicks the {string} button")
+public void userClicksTheButton(String buttonText) {
+    System.out.println("Executing: User clicks the " + buttonText + " button");
+    page.locator("#searchBtn").click();
 }
 
-@Then("I should see the title {string}")
-public void verifyTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
+@When("User selects {string} as search type")
+public void userSelectsSearchType(String searchType) {
+    System.out.println("Executing: User selects " + searchType + " as search type");
+    page.locator("#searchType").selectOption(searchType);
 }
 
-@Then("I should see the input field with placeholder {string}")
-public void verifyInputFieldPlaceholder(String expectedPlaceholder) {
-    System.out.println("Executing: I should see the input field with placeholder " + expectedPlaceholder);
-    assertThat(page.locator("#orderIdInput")).isVisible();
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
+@Then("The error message {string} should be displayed in the {string} section")
+public void theErrorMessageShouldBeDisplayedInTheSection(String expectedErrorMessage, String sectionId) {
+    System.out.println("Executing: The error message " + expectedErrorMessage + " should be displayed in the " + sectionId + " section");
+    assertThat(page.locator("#" + sectionId)).containsText(expectedErrorMessage);
 }
 
-@Given("I navigate to the OrderQuest page")
-public void navigateToOrderQuestPage() {
-    System.out.println("Executing: I navigate to the OrderQuest page");
+@Given("User is on the Order Status tracking page")
+public void userIsOnTheOrderStatusTrackingPage() {
+    System.out.println("Executing: User is on the Order Status tracking page");
     page.navigate("http://localhost:7070");
 }
 
-@Then("I should see a {string} button")
-public void verifySearchButton(String buttonText) {
-    System.out.println("Executing: I should see a " + buttonText + " button");
-    assertThat(page.locator("#searchBtn")).isVisible();
-    assertThat(page.locator("#searchBtn")).hasText(buttonText);
-}
-
-@When("I select {string} from the {string} dropdown")
-public void selectOptionFromDropdown(String optionText, String dropdownName) {
-    System.out.println("Executing: I select " + optionText + " from the " + dropdownName + " dropdown");
-    page.locator("#searchType").selectOption(new SelectOption().setLabel(optionText));
+@When("User enters order number {string}")
+public void userEntersOrderNumber(String orderNumber) {
+    System.out.println("Executing: User enters order number " + orderNumber);
+    page.locator("#orderIdInput").fill(orderNumber);
 }
 
 }
