@@ -26,10 +26,11 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("The order details should be displayed in the {string} section")
-public void theOrderDetailsShouldBeDisplayedInTheSection(String sectionId) {
-    System.out.println("Executing: The order details should be displayed in the " + sectionId + " section");
-    assertThat(page.locator("#" + sectionId)).isVisible();
+@Then("The order details should be displayed for order {string}")
+public void theOrderDetailsShouldBeDisplayedForOrder(String orderId) {
+    System.out.println("Executing: The order details should be displayed for order " + orderId);
+    assertThat(page.locator("#orderDetails")).isVisible();
+    assertThat(page.locator("#orderDetails")).containsText("Order ID: " + orderId);
 }
 
 @When("User clicks the {string} button")
@@ -38,28 +39,29 @@ public void userClicksTheButton(String buttonText) {
     page.locator("#searchBtn").click();
 }
 
-@When("User selects {string} as search type")
-public void userSelectsSearchType(String searchType) {
-    System.out.println("Executing: User selects " + searchType + " as search type");
+@Given("User is on the order tracking page")
+public void userIsOnTheOrderTrackingPage() {
+    System.out.println("Executing: User is on the order tracking page");
+    page.navigate("http://127.0.0.1:8088/order/tracking");
+}
+
+@When("User enters order number {string} in the order ID input")
+public void userEntersOrderNumberInTheOrderIdInput(String orderNo) {
+    System.out.println("Executing: User enters order number " + orderNo + " in the order ID input");
+    page.locator("#orderIdInput").fill(orderNo);
+}
+
+@Then("The error message {string} should be displayed")
+public void theErrorMessageShouldBeDisplayed(String errorMessage) {
+    System.out.println("Executing: The error message " + errorMessage + " should be displayed");
+    assertThat(page.locator("#error")).isVisible();
+    assertThat(page.locator("#error")).containsText(errorMessage);
+}
+
+@When("User selects {string} from the search type dropdown")
+public void userSelectsFromSearchTypeDropdown(String searchType) {
+    System.out.println("Executing: User selects " + searchType + " from the search type dropdown");
     page.locator("#searchType").selectOption(searchType);
-}
-
-@Then("The error message {string} should be displayed in the {string} section")
-public void theErrorMessageShouldBeDisplayedInTheSection(String expectedErrorMessage, String sectionId) {
-    System.out.println("Executing: The error message " + expectedErrorMessage + " should be displayed in the " + sectionId + " section");
-    assertThat(page.locator("#" + sectionId)).containsText(expectedErrorMessage);
-}
-
-@Given("User is on the Order Status tracking page")
-public void userIsOnTheOrderStatusTrackingPage() {
-    System.out.println("Executing: User is on the Order Status tracking page");
-    page.navigate("http://localhost:7070");
-}
-
-@When("User enters order number {string}")
-public void userEntersOrderNumber(String orderNumber) {
-    System.out.println("Executing: User enters order number " + orderNumber);
-    page.locator("#orderIdInput").fill(orderNumber);
 }
 
 }
