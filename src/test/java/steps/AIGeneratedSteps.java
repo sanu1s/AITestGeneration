@@ -26,55 +26,79 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see a designated, empty area for displaying search results")
-public void iShouldSeeADesignatedEmptyAreaForDisplayingSearchResults() {
-    System.out.println("Executing: I should see a designated, empty area for displaying search results");
-    // Assuming a common ID or class for the results area, e.g., #searchResults or .results-container
-    // As no specific UI structure was provided, we'll use a likely generic selector
-    // and assert it's visible and initially empty.
-    // If a specific ID/class were provided, it would be used here.
-    assertThat(page.locator("#searchResults, .results-container")).isVisible();
-    assertThat(page.locator("#searchResults, .results-container")).isEmpty();
+@Then("the dropdown with ID {string} should contain option {string}")
+public void verifyDropdownContainsOption(String id, String optionText) {
+    System.out.println("Executing: the dropdown with ID " + id + " should contain option " + optionText);
+    assertThat(page.locator("select#" + id + " option:has-text(\"" + optionText + "\")")).isVisible();
 }
 
-@Given("I navigate to {string}")
-public void iNavigateTo(String url) {
-    System.out.println("Executing: I navigate to " + url);
-    // CRITICAL: Using the validation URL as per instructions, not the Gherkin URL
-    page.navigate("http://127.0.0.1:8088/order/tracking");
+@Then("the input field with ID {string} should have placeholder {string}")
+public void verifyInputFieldPlaceholder(String id, String placeholderText) {
+    System.out.println("Executing: the input field with ID " + id + " should have placeholder " + placeholderText);
+    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", placeholderText);
 }
 
-@Then("I should see a prominent title {string}")
-public void iShouldSeeAProminentTitle(String expectedTitle) {
-    System.out.println("Executing: I should see a prominent title " + expectedTitle);
+@Then("I should see a dropdown with ID {string}")
+public void verifyDropdownWithId(String id) {
+    System.out.println("Executing: I should see a dropdown with ID " + id);
+    assertThat(page.locator("select#" + id)).isVisible();
+}
+
+@Then("I should see an input field with ID {string}")
+public void verifyInputFieldWithId(String id) {
+    System.out.println("Executing: I should see an input field with ID " + id);
+    assertThat(page.locator("input#" + id)).isVisible();
+}
+
+@Then("I should see the page title {string}")
+public void verifyPageTitle(String expectedTitle) {
+    System.out.println("Executing: I should see the page title " + expectedTitle);
     assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("I should see an input field clearly labeled {string}")
-public void iShouldSeeAnInputFieldClearlyLabeled(String label) {
-    System.out.println("Executing: I should see an input field clearly labeled " + label);
-    // Assuming input fields are associated with their labels, or have placeholders matching the label
-    assertThat(page.getByLabel(label)).isVisible();
-    assertThat(page.getByLabel(label)).isEnabled();
+@Then("I should see a button with ID {string} and text {string}")
+public void verifyButtonWithIdAndText(String id, String buttonText) {
+    System.out.println("Executing: I should see a button with ID " + id + " and text " + buttonText);
+    assertThat(page.locator("button#" + id)).hasText(buttonText);
 }
 
-@Then("I should see a {string} button that can trigger a search action")
-public void iShouldSeeAButtonThatCanTriggerASearchAction(String buttonText) {
-    System.out.println("Executing: I should see a " + buttonText + " button that can trigger a search action");
-    assertThat(page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName(buttonText))).isVisible();
-    assertThat(page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName(buttonText))).isEnabled();
+@When("I select {string} from the dropdown with ID {string}")
+public void selectOptionFromDropdown(String optionText, String id) {
+    System.out.println("Executing: I select " + optionText + " from the dropdown with ID " + id);
+    page.locator("select#" + id).selectOption(optionText);
 }
 
-@When("I enter {string} into the {string} field")
-public void iEnterIntoTheField(String text, String fieldLabel) {
-    System.out.println("Executing: I enter " + text + " into the " + fieldLabel + " field");
-    page.getByLabel(fieldLabel).fill(text);
+@Then("the dropdown with ID {string} should have {string} as the selected option")
+public void verifySelectedDropdownOption(String id, String expectedOption) {
+    System.out.println("Executing: the dropdown with ID " + id + " should have " + expectedOption + " as the selected option");
+    String selectedText = (String) page.locator("select#" + id).evaluate("el => el.options[el.selectedIndex].text");
+    assertEquals(expectedOption, selectedText);
 }
 
-@Then("The {string} field should contain {string}")
-public void theFieldShouldContain(String fieldLabel, String expectedText) {
-    System.out.println("Executing: The " + fieldLabel + " field should contain " + expectedText);
-    assertThat(page.getByLabel(fieldLabel)).hasValue(expectedText);
+@Then("I should see an empty search results area with ID {string}")
+public void verifyEmptySearchResultsArea(String id) {
+    System.out.println("Executing: I should see an empty search results area with ID " + id);
+    assertThat(page.locator("div#" + id + ", section#" + id)).isVisible();
+    assertThat(page.locator("div#" + id + ", section#" + id)).hasText("");
+}
+
+@Then("the input field with ID {string} should still have placeholder {string}")
+public void verifyInputFieldStillHasPlaceholder(String id, String placeholderText) {
+    System.out.println("Executing: the input field with ID " + id + " should still have placeholder " + placeholderText);
+    assertThat(page.locator("input#" + id)).hasAttribute("placeholder", placeholderText);
+}
+
+@Given("I navigate to the OrderQuest page URL {string}")
+public void navigateToOrderQuestPage(String url) {
+    System.out.println("Executing: I navigate to the OrderQuest page URL " + url);
+    page.navigate(url);
+}
+
+@Then("I should see an empty error message area with ID {string}")
+public void verifyEmptyErrorMessageArea(String id) {
+    System.out.println("Executing: I should see an empty error message area with ID " + id);
+    assertThat(page.locator("div#" + id + ", section#" + id)).isVisible();
+    assertThat(page.locator("div#" + id + ", section#" + id)).hasText("");
 }
 
 }
