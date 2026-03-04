@@ -26,60 +26,64 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("the input field should have the placeholder {string}")
-public void verifyInputFieldPlaceholder(String expectedPlaceholder) {
-    System.out.println("Executing: the input field should have the placeholder " + expectedPlaceholder);
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
-}
-
-@Then("I should see a button labeled {string}")
-public void verifySearchButton(String buttonText) {
-    System.out.println("Executing: I should see a button labeled " + buttonText);
-    assertThat(page.locator("#searchBtn")).isVisible();
-    assertThat(page.locator("#searchBtn")).hasText(buttonText);
-}
-
-@Then("I should see the page title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the page title " + expectedTitle);
+@Then("I should see the title {string}")
+public void verifyTitle(String expectedTitle) {
+    System.out.println("Executing: I should see the title " + expectedTitle);
     assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("I should see a dropdown to select search type")
-public void verifySearchTypeDropdownVisible() {
-    System.out.println("Executing: I should see a dropdown to select search type");
-    assertThat(page.locator("#searchType")).isVisible();
+@Then("I should see a dropdown with ID {string} and options {string} and {string}")
+public void verifySearchTypeDropdown(String dropdownId, String option1, String option2) {
+    System.out.println("Executing: I should see a dropdown with ID " + dropdownId + " and options " + option1 + " and " + option2);
+    assertThat(page.locator("select#" + dropdownId)).isVisible();
+    assertThat(page.locator("select#" + dropdownId + " option").nth(0)).hasText(option1);
+    assertThat(page.locator("select#" + dropdownId + " option").nth(1)).hasText(option2);
 }
 
-@Then("the dropdown should contain {string} as an option")
-public void verifyDropdownOption(String optionText) {
-    System.out.println("Executing: the dropdown should contain " + optionText + " as an option");
-    List<String> options = page.locator("#searchType option").allTextContents();
-    assertThat(options).contains(optionText);
+@Then("the status display area with ID {string} should be empty")
+public void verifyStatusDisplayAreaIsEmpty(String areaId) {
+    System.out.println("Executing: The status display area with ID " + areaId + " should be empty");
+    assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isEmpty();
 }
 
-@Then("I should see an input field for search criteria")
-public void verifySearchInputFieldVisible() {
-    System.out.println("Executing: I should see an input field for search criteria");
-    assertThat(page.locator("#orderIdInput")).isVisible();
+@Then("I should see a {string} button with ID {string}")
+public void verifySearchButton(String buttonText, String buttonId) {
+    System.out.println("Executing: I should see a " + buttonText + " button with ID " + buttonId);
+    assertThat(page.locator("button#" + buttonId)).isVisible();
+    assertThat(page.locator("button#" + buttonId)).hasText(buttonText);
+}
+
+@Then("I should see an input field with ID {string} and placeholder {string}")
+public void verifyInputFieldWithPlaceholder(String inputId, String placeholderText) {
+    System.out.println("Executing: I should see an input field with ID " + inputId + " and placeholder " + placeholderText);
+    assertThat(page.locator("input#" + inputId)).isVisible();
+    assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", placeholderText);
+}
+
+@Then("the search results area with ID {string} should be empty")
+public void verifySearchResultsAreaIsEmpty(String areaId) {
+    System.out.println("Executing: The search results area with ID " + areaId + " should be empty");
+    assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isEmpty();
 }
 
 @Given("I navigate to the OrderQuest application")
-public void navigateToOrderQuestApplication() {
+public void navigateToOrderQuest() {
     System.out.println("Executing: I navigate to the OrderQuest application");
     page.navigate("http://localhost:7070");
 }
 
-@Then("the search results display area should be initially empty")
-public void verifySearchResultsAreaEmpty() {
-    System.out.println("Executing: the search results display area should be initially empty");
-    // Check if the primary result area is visible but empty, or hidden
-    Locator orderDetails = page.locator("#orderDetails");
-    Locator displayStatus = page.locator("#displayStatus");
-    Locator errorArea = page.locator("#error");
+@Then("the {string} option should be selected by default in the search type dropdown")
+public void verifyDefaultDropdownSelection(String expectedSelectedLabel) {
+    System.out.println("Executing: The " + expectedSelectedLabel + " option should be selected by default in the search type dropdown");
+    // Using org.junit.jupiter.api.Assertions.assertEquals for string comparison
+    // Assuming 'assertEquals' is statically imported or available in the test context
+    assertEquals(expectedSelectedLabel, (String) page.locator("select#searchType").evaluate("el => el.options[el.selectedIndex].text"));
+}
 
-    if (orderDetails.isVisible()) {
-        assertThat(orderDetails).hasText("");
-    }
+@Then("the error display area with ID {string} should be empty")
+public void verifyErrorDisplayAreaIsEmpty(String areaId) {
+    System.out.println("Executing: The error display area with ID " + areaId + " should be empty");
+    assertThat(page.locator("div#" + areaId + ", section#" + areaId)).isEmpty();
+}
 
 }
