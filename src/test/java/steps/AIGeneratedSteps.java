@@ -1,6 +1,7 @@
 package steps;
 
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
@@ -25,59 +26,82 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
+@Then("the input field with ID {string} should have placeholder {string}")
+    public void verifyInputFieldPlaceholder(String inputId, String expectedPlaceholder) {
+        System.out.println("Executing: The input field with ID " + inputId + " should have placeholder " + expectedPlaceholder);
+        assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", expectedPlaceholder);
+    }
+
 @Then("I should see the title {string}")
-    public void iShouldSeeTheTitle(String expectedTitle) {
+    public void verifyPageTitle(String expectedTitle) {
         System.out.println("Executing: I should see the title " + expectedTitle);
         assertThat(page).hasTitle(expectedTitle);
     }
 
-@Then("I should see a {string} button")
-    public void iShouldSeeAButton(String buttonText) {
-        System.out.println("Executing: I should see a " + buttonText + " button");
+@Then("I should see the {string} option in the search type dropdown")
+    public void verifySearchTypeDropdownOption(String optionText) {
+        System.out.println("Executing: I should see the " + optionText + " option in the search type dropdown");
+        assertThat(page.locator("#searchType").locator("option", new com.microsoft.playwright.Locator.LocatorOptions().setHasText(optionText))).isVisible();
+    }
+
+@Then("I should see a {string} button with text {string}")
+    public void verifySearchButton(String buttonId, String buttonText) {
+        System.out.println("Executing: I should see a " + buttonId + " button with text " + buttonText);
         assertThat(page.locator("#searchBtn")).isVisible();
         assertThat(page.locator("#searchBtn")).hasText(buttonText);
     }
 
-@Then("I should see an input field with placeholder {string}")
-    public void iShouldSeeAnInputFieldWithPlaceholder(String placeholderText) {
-        System.out.println("Executing: I should see an input field with placeholder " + placeholderText);
-        assertThat(page.locator("#orderIdInput")).isVisible();
-        assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholderText);
+@Then("I should see an empty area for displaying status messages with ID {string}")
+    public void verifyEmptyStatusMessagesArea(String elementId) {
+        System.out.println("Executing: I should see an empty area for displaying status messages with ID " + elementId);
+        assertThat(page.locator("#" + elementId)).isVisible();
+        assertThat(page.locator("#" + elementId)).hasText("");
     }
 
-@Then("I should see {string} as an option")
-    public void iShouldSeeAsAnOption(String optionText) {
-        System.out.println("Executing: I should see " + optionText + " as an option");
-        // Check if the option exists within the dropdown
-        assertThat(page.locator("#searchType").locator("option").filter(new Locator.FilterOptions().setHasText(optionText))).isVisible();
+@Then("I should see an input field with ID {string} and placeholder {string}")
+    public void verifyInputFieldWithPlaceholder(String inputId, String expectedPlaceholder) {
+        System.out.println("Executing: I should see an input field with ID " + inputId + " and placeholder " + expectedPlaceholder);
+        assertThat(page.locator("input#" + inputId)).isVisible();
+        assertThat(page.locator("input#" + inputId)).hasAttribute("placeholder", expectedPlaceholder);
     }
 
-@Then("the designated search results area should be empty")
-    public void theDesignatedSearchResultsAreaShouldBeEmpty() {
-        System.out.println("Executing: the designated search results area should be empty");
-        // Assuming these areas are initially hidden or empty
-        assertThat(page.locator("#orderDetails")).isHidden();
-        assertThat(page.locator("#displayStatus")).isHidden();
-        assertThat(page.locator("#error")).isHidden();
+@Then("I should see an empty area for displaying order details with ID {string}")
+    public void verifyEmptyOrderDetailsArea(String elementId) {
+        System.out.println("Executing: I should see an empty area for displaying order details with ID " + elementId);
+        assertThat(page.locator("#" + elementId)).isVisible();
+        assertThat(page.locator("#" + elementId)).hasText("");
     }
 
-@When("I interact with the search type dropdown")
-    public void iInteractWithTheSearchTypeDropdown() {
-        System.out.println("Executing: I interact with the search type dropdown (no explicit action needed for this step)");
-        // This step primarily sets context for the following 'Then' steps
+@Given("I am on the OrderQuest application page")
+    public void iAmOnTheOrderQuestApplicationPage() {
+        System.out.println("Executing: I am on the OrderQuest application page");
+        page.navigate("http://localhost:7070");
+        assertThat(page).hasTitle("OrderQuest | Premium Order Search");
+    }
+
+@When("I select {string} from the search type dropdown")
+    public void selectSearchTypeFromDropdown(String searchType) {
+        System.out.println("Executing: I select " + searchType + " from the search type dropdown");
+        page.locator("#searchType").selectOption(searchType);
+    }
+
+@Then("I should see an empty area for displaying error messages with ID {string}")
+    public void verifyEmptyErrorMessagesArea(String elementId) {
+        System.out.println("Executing: I should see an empty area for displaying error messages with ID " + elementId);
+        assertThat(page.locator("#" + elementId)).isVisible();
+        assertThat(page.locator("#" + elementId)).hasText("");
     }
 
 @Given("I navigate to the OrderQuest application")
-    public void iNavigateToTheOrderQuestApplication() {
+    public void navigateToOrderQuestApplication() {
         System.out.println("Executing: I navigate to the OrderQuest application");
         page.navigate("http://localhost:7070");
     }
 
-@Then("I should see a search type dropdown with {string} as the default selected option")
-    public void iShouldSeeASearchTypeDropdownWithAsTheDefaultSelectedOption(String defaultOption) {
-        System.out.println("Executing: I should see a search type dropdown with " + defaultOption + " as the default selected option");
-        assertThat(page.locator("#searchType")).isVisible();
-        assertEquals(defaultOption, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
+@Then("the {string} option should be selected by default in the search type dropdown")
+    public void verifyDefaultSelectedSearchType(String expectedOption) {
+        System.out.println("Executing: The " + expectedOption + " option should be selected by default in the search type dropdown");
+        assertEquals(expectedOption, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
     }
 
 }
