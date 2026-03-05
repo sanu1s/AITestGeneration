@@ -26,79 +26,90 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Given("I am on the Order Quest page")
-public void iAmOnTheOrderQuestPage() {
-    System.out.println("Executing: I am on the Order Quest page");
-    page.navigate("http://orderquest.com:7070");
+@Then("the 'Order Details' section should be visible and empty")
+public void verifyOrderDetailsSectionVisibleAndEmpty() {
+    System.out.println("Executing: The 'Order Details' section should be visible and empty");
+    assertThat(page.locator("#orderDetails")).isVisible();
+    assertThat(page.locator("#orderDetails")).isEmpty();
 }
 
-@Then("the search results container should be empty")
-public void theSearchResultsContainerShouldBeEmpty() {
-    System.out.println("Executing: The search results container should be empty");
-    assertThat(page.locator("#orderDetails")).hasText("");
+@Given("the 'Search Type' dropdown is visible")
+public void searchTypeDropdownIsVisible() {
+    System.out.println("Executing: The 'Search Type' dropdown is visible");
+    assertThat(page.locator("#searchType")).isVisible();
 }
 
-@Then("the {string} dropdown should be pre-selected with {string}")
-public void theSearchTypeDropdownShouldBePreSelectedWith(String dropdownLabel, String expectedSelection) {
-    System.out.println("Executing: The " + dropdownLabel + " dropdown should be pre-selected with " + expectedSelection);
-    assertThat(page.locator("#searchType")).hasValue(expectedSelection.replace(" ", "").toLowerCase()); // Assuming value is 'orderid'
-    // To verify the visible text of the selected option:
-    assertEquals(expectedSelection, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
+@Then("the 'error' section should be hidden")
+public void verifyErrorSectionHidden() {
+    System.out.println("Executing: The 'error' section should be hidden");
+    assertThat(page.locator("#error")).isHidden();
 }
 
-@Then("I should see a {string} button with text {string}")
-public void iShouldSeeAButtonWithText(String buttonName, String buttonText) {
-    System.out.println("Executing: I should see a " + buttonName + " button with text " + buttonText);
+@When("I select {string} from the 'Search Type' dropdown")
+public void selectOptionFromSearchTypeDropdown(String optionLabel) {
+    System.out.println("Executing: I select " + optionLabel + " from the 'Search Type' dropdown");
+    if ("Tracking Number".equals(optionLabel)) {
+        page.locator("#searchType").selectOption("tracking");
+    } else if ("Order ID".equals(optionLabel)) {
+        page.locator("#searchType").selectOption("orderId");
+    } else {
+        throw new IllegalArgumentException("Unknown option label: " + optionLabel);
+    }
+}
+
+@Then("the 'errorMessage' paragraph should be hidden")
+public void verifyErrorMessageParagraphHidden() {
+    System.out.println("Executing: The 'errorMessage' paragraph should be hidden");
+    assertThat(page.locator("#errorMessage")).isHidden();
+}
+
+@Then("the 'Search' button should be visible with text {string}")
+public void verifySearchButtonVisibleWithText(String buttonText) {
+    System.out.println("Executing: The 'Search' button should be visible with text " + buttonText);
     assertThat(page.locator("#searchBtn")).isVisible();
     assertThat(page.locator("#searchBtn")).hasText(buttonText);
 }
 
-@Then("I should see a {string} button")
-public void iShouldSeeAButton(String buttonName) {
-    System.out.println("Executing: I should see a " + buttonName + " button");
-    assertThat(page.locator("#searchBtn")).isVisible();
+@Given("I have selected {string} from the 'Search Type' dropdown")
+public void iHaveSelectedFromSearchTypeDropdown(String optionLabel) {
+    System.out.println("Executing: I have selected " + optionLabel + " from the 'Search Type' dropdown");
+    if ("Tracking Number".equals(optionLabel)) {
+        page.locator("#searchType").selectOption("tracking");
+    } else if ("Order ID".equals(optionLabel)) {
+        page.locator("#searchType").selectOption("orderId");
+    } else {
+        throw new IllegalArgumentException("Unknown option label: " + optionLabel);
+    }
 }
 
-@Then("the {string} button should display text {string}")
-public void theButtonShouldDisplayText(String buttonName, String expectedText) {
-    System.out.println("Executing: The " + buttonName + " button should display text " + expectedText);
-    assertThat(page.locator("#searchBtn")).hasText(expectedText);
-}
-
-@Then("the error message container should be hidden")
-public void theErrorMessageContainerShouldBeHidden() {
-    System.out.println("Executing: The error message container should be hidden");
-    assertThat(page.locator("#error")).isHidden();
-}
-
-@Then("the {string} button should be enabled")
-public void theButtonShouldBeEnabled(String buttonName) {
-    System.out.println("Executing: The " + buttonName + " button should be enabled");
-    assertThat(page.locator("#searchBtn")).isEnabled();
-}
-
-@Then("I should see a dropdown with label {string}")
-public void iShouldSeeADropdownWithLabel(String labelText) {
-    System.out.println("Executing: I should see a dropdown with label " + labelText);
-    assertThat(page.locator("label:has-text(" + labelText + ")")).isVisible();
-    assertThat(page.locator("#searchType")).isVisible();
-}
-
-@When("I select {string} from the {string} dropdown")
-public void iSelectFromTheDropdown(String optionText, String dropdownLabel) {
-    System.out.println("Executing: I select " + optionText + " from the " + dropdownLabel + " dropdown");
-    page.locator("#searchType").selectOption(optionText);
+@Given("I navigate to the Order Quest application")
+public void navigateToOrderQuest() {
+    System.out.println("Executing: I navigate to the Order Quest application");
+    page.navigate("http://orderquest.com:7070");
 }
 
 @Then("the page title should be {string}")
-public void thePageTitleShouldBe(String expectedTitle) {
+public void verifyPageTitle(String expectedTitle) {
     System.out.println("Executing: The page title should be " + expectedTitle);
     assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("the {string} input field should have placeholder {string}")
-public void theInputFieldShouldHavePlaceholder(String fieldName, String expectedPlaceholder) {
-    System.out.println("Executing: The " + fieldName + " input field should have placeholder " + expectedPlaceholder);
+@Then("the 'Search Type' dropdown should be visible")
+public void verifySearchTypeDropdownVisible() {
+    System.out.println("Executing: The 'Search Type' dropdown should be visible");
+    assertThat(page.locator("#searchType")).isVisible();
+}
+
+@Then("the 'Order ID' input field should be visible with placeholder {string}")
+public void verifyOrderIdInputVisibleWithPlaceholder(String placeholder) {
+    System.out.println("Executing: The 'Order ID' input field should be visible with placeholder " + placeholder);
+    assertThat(page.locator("#orderIdInput")).isVisible();
+    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", placeholder);
+}
+
+@Then("the 'Order ID' input field's placeholder should change to {string}")
+public void verifyOrderIdInputPlaceholderChange(String expectedPlaceholder) {
+    System.out.println("Executing: The 'Order ID' input field's placeholder should change to " + expectedPlaceholder);
     assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
 }
 
