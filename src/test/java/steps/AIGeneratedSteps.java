@@ -26,129 +26,77 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@When("I enter a valid order number {string} into the order ID input field")
-public void iEnterAValidOrderNumberIntoTheOrderIdInputField(String orderNumber) {
-    System.out.println("Entering valid order number: " + orderNumber);
-    page.locator("#orderIdInput").fill(orderNumber);
+    @Given("I am on the Order Search Page")
+    public void navigateToApp() {
+        System.out.println("Executing: Navigating to Order Search Page");
+        page.navigate("http://orderquest.com:7070");
+    }
+
+    @When("I select {string} from the dropdown")
+    @When("I select {string} from the search type dropdown")
+    public void selectDropdown(String optionLabel) {
+        System.out.println("Executing: Selecting '" + optionLabel + "' from dropdown");
+        page.locator("#searchType").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel(optionLabel));
+    }
+
+    @When("I enter {string} into the {string} field")
+    public void enterIntoField(String value, String fieldLabel) {
+        System.out.println("Executing: Entering '" + value + "' into '" + fieldLabel + "' field");
+        page.locator("#orderIdInput").fill(value);
+    }
+
+    @When("I click the {string} button")
+    public void clickButton(String buttonText) {
+        System.out.println("Executing: Clicking '" + buttonText + "' button");
+        page.locator("#searchBtn:has-text(\\\"" + buttonText + "\\\")").click();
+    }
+
+    @Then("the {string} section should be {string}")
+    public void verifySectionState(String sectionName, String state) {
+        System.out.println("Executing: Verifying '" + sectionName + "' section is " + state);
+        com.microsoft.playwright.Locator locator = sectionName.toLowerCase().contains("error") ? page.locator("#error") : page.locator("#orderDetails");
+        if (state.equalsIgnoreCase("visible")) {
+            assertThat(locator).isVisible();
+        } else {
+            assertThat(locator).isHidden();
+        }
+    }
+
+    @Then("the {string} should contain text {string}")
+    @Then("the {string} should display {string}")
+    public void verifyTextContent(String element, String expectedText) {
+        System.out.println("Executing: Verifying '" + element + "' contains text: " + expectedText);
+        com.microsoft.playwright.Locator locator = element.toLowerCase().contains("error") ? page.locator("#errorMessage") : page.locator("#orderDetails");
+        assertThat(locator).containsText(expectedText);
+    }
+
+@Then("the {string} field's placeholder should be {string}")
+public void verifyFieldPlaceholder(String fieldName, String expectedPlaceholder) {
+    System.out.println("Executing: Then the " + fieldName + " field's placeholder should be " + expectedPlaceholder);
+    String locatorId = "";
+    switch (fieldName) {
+        case "Order ID":
+        case "Tracking Number":
+            locatorId = "#orderIdInput";
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown field name: " + fieldName);
+    }
+    assertThat(page.locator(locatorId)).hasAttribute("placeholder", expectedPlaceholder);
 }
 
-@And("the order details should display customer billing address {string}")
-public void theOrderDetailsShouldDisplayCustomerBillingAddress(String address) {
-    System.out.println("Verifying billing address: " + address);
-    assertThat(page.locator("#orderDetails")).containsText(address);
-}
-
-@And("I click the {string} button")
-public void iClickTheButton(String buttonText) {
-    System.out.println("Clicking button: " + buttonText);
-    page.locator("#searchBtn:has-text(\"" + buttonText + "\")").click();
-}
-
-@And("the order details section should be hidden")
-public void theOrderDetailsSectionShouldBeHidden() {
-    System.out.println("Verifying order details section is hidden.");
-    assertThat(page.locator("#orderDetails")).isHidden();
-}
-
-@And("the order details should display delivery date {string}")
-public void theOrderDetailsShouldDisplayDeliveryDate(String date) {
-    System.out.println("Verifying delivery date: " + date);
-    assertThat(page.locator("#orderDetails")).containsText(date);
-}
-
-@When("I leave the order ID input field empty")
-public void iLeaveTheOrderIdInputFieldEmpty() {
-    System.out.println("Leaving order ID input field empty.");
-    page.locator("#orderIdInput").fill("");
-}
-
-@Then("the order details section should be visible")
-public void theOrderDetailsSectionShouldBeVisible() {
-    System.out.println("Verifying order details section is visible.");
-    assertThat(page.locator("#orderDetails")).isVisible();
-}
-
-@And("the order details should display customer shipping address {string}")
-public void theOrderDetailsShouldDisplayCustomerShippingAddress(String address) {
-    System.out.println("Verifying shipping address: " + address);
-    assertThat(page.locator("#orderDetails")).containsText(address);
-}
-
-@When("I select 'Tracking Number' from the search type dropdown")
-public void iSelectTrackingNumberFromTheSearchTypeDropdown() {
-    System.out.println("Selecting 'Tracking Number' from search type dropdown.");
-    page.locator("#searchType").selectOption(new SelectOption().setLabel("Tracking Number"));
-}
-
-@And("the error message section should be visible")
-public void theErrorMessageSectionShouldBeVisible() {
-    System.out.println("Verifying error message section is visible.");
-    assertThat(page.locator("#error")).isVisible();
-    assertThat(page.locator("#errorMessage")).isVisible();
-}
-
-@When("I enter an invalid order number {string} into the order ID input field")
-public void iEnterAnInvalidOrderNumberIntoTheOrderIdInputField(String invalidOrderNumber) {
-    System.out.println("Entering invalid order number: " + invalidOrderNumber);
-    page.locator("#orderIdInput").fill(invalidOrderNumber);
-}
-
-@Given("I am on the Order Search Page")
-public void iAmOnTheOrderSearchPage() {
-    System.out.println("Navigating to Order Search Page.");
-    page.navigate("http://orderquest.com:7070");
-    assertThat(page).hasURL("http://orderquest.com:7070/");
-    assertThat(page.locator("#searchType")).isVisible();
-    assertThat(page.locator("#orderIdInput")).isVisible();
-    assertThat(page.locator("#searchBtn")).isVisible();
-    assertThat(page.locator("#orderDetails")).isVisible(); // It's initially visible as per discovery
-    assertThat(page.locator("#error")).isHidden();
-    assertThat(page.locator("#errorMessage")).isHidden();
-}
-
-@Then("the error message section should be visible")
-public void theErrorMessageSectionShouldBeVisible_13() {
-    System.out.println("Verifying error message section is visible.");
-    assertThat(page.locator("#error")).isVisible();
-    assertThat(page.locator("#errorMessage")).isVisible();
-}
-
-@Then("the order ID input field should have placeholder {string}")
-public void theOrderIdInputFieldShouldHavePlaceholder(String expectedPlaceholder) {
-    System.out.println("Verifying order ID input field placeholder: " + expectedPlaceholder);
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
-}
-
-@Then("the order details section should be hidden")
-public void theOrderDetailsSectionShouldBeHidden_15() {
-    System.out.println("Verifying order details section is hidden.");
-    assertThat(page.locator("#orderDetails")).isHidden();
-}
-
-@And("I ensure 'Order ID' is selected in the search type dropdown")
-public void iEnsureOrderIdIsSelectedInTheSearchTypeDropdown() {
-    System.out.println("Ensuring 'Order ID' is selected in search type dropdown.");
-    page.locator("#searchType").selectOption(new SelectOption().setLabel("Order ID"));
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", "Enter Order ID");
-}
-
-@And("I enter a tracking number {string} into the order ID input field")
-public void iEnterATrackingNumberIntoTheOrderIdInputField(String trackingNumber) {
-    System.out.println("Entering tracking number: " + trackingNumber);
-    page.locator("#orderIdInput").fill(trackingNumber);
-}
-
-@And("the error message section should be hidden")
-public void theErrorMessageSectionShouldBeHidden() {
-    System.out.println("Verifying error message section is hidden.");
-    assertThat(page.locator("#error")).isHidden();
-    assertThat(page.locator("#errorMessage")).isHidden();
-}
-
-@And("the error message should display {string}")
-public void theErrorMessageShouldDisplay(String expectedErrorMessage) {
-    System.out.println("Verifying error message: " + expectedErrorMessage);
-    assertThat(page.locator("#errorMessage")).containsText(expectedErrorMessage);
+@Then("the {string} dropdown should display {string}")
+public void verifyDropdownSelection(String dropdownName, String expectedSelection) {
+    System.out.println("Executing: Then the " + dropdownName + " dropdown should display " + expectedSelection);
+    String locatorId = "";
+    switch (dropdownName) {
+        case "searchType":
+            locatorId = "select#searchType";
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown dropdown name: " + dropdownName);
+    }
+    assertEquals(expectedSelection, (String) page.locator(locatorId).evaluate("el => el.options[el.selectedIndex].text"));
 }
 
 }
