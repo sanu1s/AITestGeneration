@@ -134,4 +134,28 @@ public class AIGeneratedSteps {
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
     }
 
+@Then("I should see the page title as {string}")
+public void iShouldSeeThePageTitleAs(String expectedTitle) {
+    System.out.println("Executing: I should see the page title as " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
+}
+
+@Then("the {string} dropdown should have options: {string}")
+public void theDropdownShouldHaveOptions(String dropdownId, String expectedOptions) {
+    System.out.println("Executing: the " + dropdownId + " dropdown should have options: " + expectedOptions);
+    List<String> actualOptions = page.locator("select#" + dropdownId + " option").allTextContents();
+    List<String> expectedOptionsList = Arrays.asList(expectedOptions.split(","));
+    assertEquals(expectedOptionsList.size(), actualOptions.size(), "Number of options mismatch");
+    for (String option : expectedOptionsList) {
+        assertTrue(actualOptions.contains(option), "Option " + option + " not found in dropdown " + dropdownId);
+    }
+}
+
+@Then("the {string} dropdown should display selected option as {string}")
+public void theDropdownShouldDisplaySelectedOptionAs(String dropdownId, String expectedSelectedOption) {
+    System.out.println("Executing: the " + dropdownId + " dropdown should display selected option as " + expectedSelectedOption);
+    String actualSelectedOption = (String) page.locator("select#" + dropdownId).evaluate("el => el.options[el.selectedIndex].text");
+    assertEquals(expectedSelectedOption, actualSelectedOption);
+}
+
 }
