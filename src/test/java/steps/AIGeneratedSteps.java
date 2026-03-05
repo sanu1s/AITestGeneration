@@ -26,63 +26,80 @@ public class AIGeneratedSteps {
         this.page = testContext.page;
     }
 
-@Then("I should see an empty area for displaying search results")
-public void verifyEmptySearchResultsArea() {
-    System.out.println("Executing: I should see an empty area for displaying search results");
-    assertThat(page.locator("#orderDetails")).isVisible();
+@Given("I am on the Order Quest page")
+public void iAmOnTheOrderQuestPage() {
+    System.out.println("Executing: I am on the Order Quest page");
+    page.navigate("http://orderquest.com:7070");
+}
+
+@Then("the search results container should be empty")
+public void theSearchResultsContainerShouldBeEmpty() {
+    System.out.println("Executing: The search results container should be empty");
     assertThat(page.locator("#orderDetails")).hasText("");
 }
 
-@Then("{string} should be the selected search type")
-public void verifySelectedSearchType(String expectedOption) {
-    System.out.println("Executing: " + expectedOption + " should be the selected search type");
-    String selectedOptionText = (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text");
-    assertEquals(expectedOption, selectedOptionText);
-}
-
-@Then("I should see the title {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: I should see the title " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
+@Then("the {string} dropdown should be pre-selected with {string}")
+public void theSearchTypeDropdownShouldBePreSelectedWith(String dropdownLabel, String expectedSelection) {
+    System.out.println("Executing: The " + dropdownLabel + " dropdown should be pre-selected with " + expectedSelection);
+    assertThat(page.locator("#searchType")).hasValue(expectedSelection.replace(" ", "").toLowerCase()); // Assuming value is 'orderid'
+    // To verify the visible text of the selected option:
+    assertEquals(expectedSelection, (String) page.locator("#searchType").evaluate("el => el.options[el.selectedIndex].text"));
 }
 
 @Then("I should see a {string} button with text {string}")
-public void verifySearchButton(String buttonId, String buttonText) {
-    System.out.println("Executing: I should see a " + buttonId + " button with text " + buttonText);
+public void iShouldSeeAButtonWithText(String buttonName, String buttonText) {
+    System.out.println("Executing: I should see a " + buttonName + " button with text " + buttonText);
     assertThat(page.locator("#searchBtn")).isVisible();
     assertThat(page.locator("#searchBtn")).hasText(buttonText);
 }
 
-@Then("I should see the input field labeled {string}")
-public void verifyInputFieldLabel(String labelText) {
-    System.out.println("Executing: I should see the input field labeled " + labelText);
-    assertThat(page.locator("label[for='orderIdInput']")).containsText(labelText);
-    assertThat(page.locator("#orderIdInput")).isVisible();
+@Then("I should see a {string} button")
+public void iShouldSeeAButton(String buttonName) {
+    System.out.println("Executing: I should see a " + buttonName + " button");
+    assertThat(page.locator("#searchBtn")).isVisible();
 }
 
-@Then("the input field should have placeholder {string}")
-public void verifyInputFieldPlaceholder(String expectedPlaceholder) {
-    System.out.println("Executing: the input field should have placeholder " + expectedPlaceholder);
-    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
+@Then("the {string} button should display text {string}")
+public void theButtonShouldDisplayText(String buttonName, String expectedText) {
+    System.out.println("Executing: The " + buttonName + " button should display text " + expectedText);
+    assertThat(page.locator("#searchBtn")).hasText(expectedText);
+}
+
+@Then("the error message container should be hidden")
+public void theErrorMessageContainerShouldBeHidden() {
+    System.out.println("Executing: The error message container should be hidden");
+    assertThat(page.locator("#error")).isHidden();
+}
+
+@Then("the {string} button should be enabled")
+public void theButtonShouldBeEnabled(String buttonName) {
+    System.out.println("Executing: The " + buttonName + " button should be enabled");
+    assertThat(page.locator("#searchBtn")).isEnabled();
+}
+
+@Then("I should see a dropdown with label {string}")
+public void iShouldSeeADropdownWithLabel(String labelText) {
+    System.out.println("Executing: I should see a dropdown with label " + labelText);
+    assertThat(page.locator("label:has-text(" + labelText + ")")).isVisible();
+    assertThat(page.locator("#searchType")).isVisible();
 }
 
 @When("I select {string} from the {string} dropdown")
-public void selectOptionFromDropdown(String optionText, String dropdownLabel) {
+public void iSelectFromTheDropdown(String optionText, String dropdownLabel) {
     System.out.println("Executing: I select " + optionText + " from the " + dropdownLabel + " dropdown");
     page.locator("#searchType").selectOption(optionText);
 }
 
-@Given("I navigate to the OrderQuest application")
-public void navigateToOrderQuestApplication() {
-    System.out.println("Executing: I navigate to the OrderQuest application");
-    page.navigate("http://orderquest.com:7070");
+@Then("the page title should be {string}")
+public void thePageTitleShouldBe(String expectedTitle) {
+    System.out.println("Executing: The page title should be " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
 }
 
-@Then("I should see the {string} dropdown")
-public void verifySearchTypeDropdown(String labelText) {
-    System.out.println("Executing: I should see the " + labelText + " dropdown");
-    assertThat(page.locator("label[for='searchType']")).containsText(labelText);
-    assertThat(page.locator("#searchType")).isVisible();
+@Then("the {string} input field should have placeholder {string}")
+public void theInputFieldShouldHavePlaceholder(String fieldName, String expectedPlaceholder) {
+    System.out.println("Executing: The " + fieldName + " input field should have placeholder " + expectedPlaceholder);
+    assertThat(page.locator("#orderIdInput")).hasAttribute("placeholder", expectedPlaceholder);
 }
 
 }
