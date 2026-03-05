@@ -70,33 +70,40 @@ public class AIGeneratedSteps {
         assertThat(locator).containsText(expectedText);
     }
 
-@Then("the {string} field's placeholder should be {string}")
-public void verifyFieldPlaceholder(String fieldName, String expectedPlaceholder) {
-    System.out.println("Executing: Then the " + fieldName + " field's placeholder should be " + expectedPlaceholder);
-    String locatorId = "";
-    switch (fieldName) {
-        case "Order ID":
-        case "Tracking Number":
-            locatorId = "#orderIdInput";
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown field name: " + fieldName);
-    }
-    assertThat(page.locator(locatorId)).hasAttribute("placeholder", expectedPlaceholder);
+@Then("the {string} dropdown should be visible")
+public void verifyDropdownVisible(String id) {
+    System.out.println("Executing: Then the " + id + " dropdown should be visible");
+    assertThat(page.locator("#" + id)).isVisible();
 }
 
-@Then("the {string} dropdown should display {string}")
-public void verifyDropdownSelection(String dropdownName, String expectedSelection) {
-    System.out.println("Executing: Then the " + dropdownName + " dropdown should display " + expectedSelection);
-    String locatorId = "";
-    switch (dropdownName) {
-        case "searchType":
-            locatorId = "select#searchType";
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown dropdown name: " + dropdownName);
-    }
-    assertEquals(expectedSelection, (String) page.locator(locatorId).evaluate("el => el.options[el.selectedIndex].text"));
+@Then("the {string} field should be visible")
+public void verifyInputFieldVisible(String id) {
+    System.out.println("Executing: Then the " + id + " field should be visible");
+    assertThat(page.locator("#" + id)).isVisible();
+}
+
+@Then("the {string} section should be empty")
+public void verifySectionEmpty(String sectionId) {
+    System.out.println("Executing: Then the " + sectionId + " section should be empty");
+    assertThat(page.locator("#" + sectionId)).hasText("");
+}
+
+@Then("the {string} field should have placeholder {string}")
+public void verifyInputFieldPlaceholder(String fieldId, String placeholderText) {
+    System.out.println("Executing: Then the " + fieldId + " field should have placeholder " + placeholderText);
+    assertThat(page.locator("#" + fieldId)).hasAttribute("placeholder", placeholderText);
+}
+
+@Then("the {string} button should be visible")
+public void verifyButtonVisible(String id) {
+    System.out.println("Executing: Then the " + id + " button should be visible");
+    assertThat(page.locator("#" + id)).isVisible();
+}
+
+@Then("the page title should be {string}")
+public void verifyPageTitle(String expectedTitle) {
+    System.out.println("Executing: Then the page title should be " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
 }
 
 }
