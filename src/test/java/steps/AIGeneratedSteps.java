@@ -70,40 +70,10 @@ public class AIGeneratedSteps {
         assertThat(locator).containsText(expectedText);
     }
 
-@Then("the {string} dropdown should be visible")
-public void verifyDropdownVisible(String id) {
-    System.out.println("Executing: Then the " + id + " dropdown should be visible");
-    assertThat(page.locator("#" + id)).isVisible();
-}
-
-@Then("the {string} field should be visible")
-public void verifyInputFieldVisible(String id) {
-    System.out.println("Executing: Then the " + id + " field should be visible");
-    assertThat(page.locator("#" + id)).isVisible();
-}
-
-@Then("the {string} section should be empty")
-public void verifySectionEmpty(String sectionId) {
-    System.out.println("Executing: Then the " + sectionId + " section should be empty");
-    assertThat(page.locator("#" + sectionId)).hasText("");
-}
-
 @Then("the {string} field should have placeholder {string}")
-public void verifyInputFieldPlaceholder(String fieldId, String placeholderText) {
-    System.out.println("Executing: Then the " + fieldId + " field should have placeholder " + placeholderText);
-    assertThat(page.locator("#" + fieldId)).hasAttribute("placeholder", placeholderText);
-}
-
-@Then("the {string} button should be visible")
-public void verifyButtonVisible(String id) {
-    System.out.println("Executing: Then the " + id + " button should be visible");
-    assertThat(page.locator("#" + id)).isVisible();
-}
-
-@Then("the page title should be {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: Then the page title should be " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
+public void verifyPlaceholder(String elementId, String expectedPlaceholder) {
+    System.out.println("Executing: The " + elementId + " field should have placeholder " + expectedPlaceholder);
+    assertThat(page.locator("//input[@id='" + elementId + "']")).hasAttribute("placeholder", expectedPlaceholder);
 }
 
 }
