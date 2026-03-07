@@ -46,6 +46,7 @@ public class AIGeneratedSteps {
         
         // 4. Hardcoded fallbacks for this specific app
         String lower = cleanName.toLowerCase();
+        if (lower.contains("format hint")) return page.locator("#format-hint").first();
         if (lower.contains("order number") || lower.contains("order no") || lower.contains("order id")) return page.locator("#order_no, #orderIdInput, #resOrderId").first();
         if (lower.contains("tracking number") || lower.contains("tracking id") || lower.contains("tracking")) return page.locator("#order_no, #tracking_no").first();
         if (lower.contains("status")) return page.locator("#resStatus").first();
@@ -90,8 +91,6 @@ public class AIGeneratedSteps {
     @When("I enter {string} into the {string} field")
     public void enterIntoField(String value, String fieldLabel) {
         System.out.println("Executing: Entering '" + value + "' into '" + fieldLabel + "' field");
-        
-        // Proactive UI Management: Sync dropdown if field label implies search type
         if (fieldLabel.toLowerCase().contains("tracking")) {
             Locator sel = page.locator("#searchType, select").first();
             sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
@@ -101,11 +100,9 @@ public class AIGeneratedSteps {
             sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
             sel.dispatchEvent("change");
         }
-
         String finalValue = value;
         if (fieldLabel.toLowerCase().contains("order") && value.toUpperCase().startsWith("ORD")) {
             finalValue = value.substring(3);
-            System.out.println("Normalization: Stripped ORD prefix from value: " + finalValue);
         }
         resolveLocator(fieldLabel).fill(finalValue);
     }
@@ -211,9 +208,13 @@ public class AIGeneratedSteps {
         
         // Proactive UI Management: Sync dropdown if field label implies search type
         if (fieldName.toLowerCase().contains("tracking")) {
-            resolveLocator("searchType").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+            Locator sel = page.locator("#searchType, select").first();
+            sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+            sel.dispatchEvent("change");
         } else if (fieldName.toLowerCase().contains("order")) {
-            resolveLocator("searchType").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+            Locator sel = page.locator("#searchType, select").first();
+            sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+            sel.dispatchEvent("change");
         }
 
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
