@@ -46,13 +46,13 @@ public class AIGeneratedSteps {
         
         // 4. Hardcoded fallbacks for this specific app
         String lower = cleanName.toLowerCase();
-        if (lower.contains("order number") || lower.contains("order no") || lower.contains("tracking") || (lower.contains("order id") && cleanName.toLowerCase().contains("field"))) return page.locator("#order_no, #orderIdInput, #orderSearchInput").first();
-        if (lower.contains("order id")) return page.locator("#resOrderId, #order_no").first();
+        if (lower.contains("order number") || lower.contains("order no") || lower.contains("order id") && lower.contains("field")) return page.locator("#order_no, #orderIdInput").first();
+        if (lower.contains("tracking number") || lower.contains("tracking id") || lower.contains("tracking")) return page.locator("#order_no, #tracking_no").first();
         if (lower.contains("status")) return page.locator("#resStatus").first();
         if (lower.contains("track order") || lower.contains("search")) return page.locator("button:has-text('Track Order'), #searchBtn").first();
         if (lower.contains("error")) return page.locator("#error-box, #error, #errorMessage, .result").first();
         if (lower.contains("details")) return page.locator("#orderDetails");
-        if (lower.contains("results area")) return page.locator(".result").first();
+        if (lower.contains("results area") || lower.contains("search results")) return page.locator(".result, #searchResults").first();
 
         // 5. Try by Text
         locator = page.getByText(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
@@ -77,6 +77,14 @@ public class AIGeneratedSteps {
     @When("I enter {string} into the {string} field")
     public void enterIntoField(String value, String fieldLabel) {
         System.out.println("Executing: Entering '" + value + "' into '" + fieldLabel + "' field");
+        
+        // Proactive UI Management: Sync dropdown if field label implies search type
+        if (fieldLabel.toLowerCase().contains("tracking")) {
+            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+        } else if (fieldLabel.toLowerCase().contains("order")) {
+            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+        }
+
         String finalValue = value;
         if (fieldLabel.toLowerCase().contains("order") && value.toUpperCase().startsWith("ORD")) {
             finalValue = value.substring(3);
@@ -146,7 +154,6 @@ public class AIGeneratedSteps {
                 }
             }
             if (actualText == null) actualText = "";
-            
             String cleanActual = actualText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
             
             if (cleanActual.contains(cleanExpected)) {
@@ -174,32 +181,53 @@ public class AIGeneratedSteps {
             }
         }
     }
-
     @Then("the {string} field should have placeholder {string}")
     public void verifyPlaceholder(String fieldName, String expectedPlaceholder) {
         System.out.println("Executing: Verifying '" + fieldName + "' placeholder: " + expectedPlaceholder);
+        
+        // Proactive UI Management: Sync dropdown if field label implies search type
+        if (fieldName.toLowerCase().contains("tracking")) {
+            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+        } else if (fieldName.toLowerCase().contains("order")) {
+            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+        }
+
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
     }
 
-    @Then("the {string} section should be empty")
-    @Then("the {string} should be empty")
-    public void verifyEmpty(String element) {
-        System.out.println("Executing: Verifying '" + element + "' is empty");
-        Locator locator = resolveLocator(element);
-        assertThat(locator).isEmpty();
+    @Then("I should see an input field clearly labeled {string}")
+    @Then("I should see an input field {string}")
+    public void verifyInputField(String label) {
+        assertThat(resolveLocator(label)).isVisible();
     }
 
-    @Then("the {string} button should be enabled")
-    public void theButtonShouldBeEnabled(String buttonName) {
-        System.out.println("Executing: The " + buttonName + " button should be enabled");
-        resolveLocator(buttonName).isEnabled();
+    @Then("I should see a {string} button")
+    public void verifyButtonVisible(String buttonText) {
+        assertThat(resolveLocator(buttonText)).isVisible();
     }
 
-    @Then("I should see a prominent title {string}")
-    public void iShouldSeeAProminentTitle(String expectedTitle) {
-        System.out.println("Executing: I should see a prominent title " + expectedTitle);
-        // Use verifyTextContent logic if it fails or use a wait
-        verifyTextContent("page title", expectedTitle);
+@Then("the page title should be {string}")
+public void verifyPageTitle(String expectedTitle) {
+    System.out.println("Executing: Then the page title should be " + expectedTitle);
+    assertThat(page).hasTitle(expectedTitle);
+}
+
+@Then("the {string} section should be empty")
+public void verifySectionIsEmpty(String sectionId) {
+    System.out.println("Executing: Then the " + sectionId + " section should be empty");
+    assertThat(page.locator("section#" + sectionId)).hasText("");
+}
+
+@Then("the {string} should be {string}")
+public void verifyElementVisibility(String elementId, String visibility) {
+    System.out.println("Executing: Then the " + elementId + " should be " + visibility);
+    if (visibility.equalsIgnoreCase("visible")) {
+        assertThat(page.locator("#" + elementId)).isVisible();
+    } else if (visibility.equalsIgnoreCase("hidden")) {
+        assertThat(page.locator("#" + elementId)).isHidden();
+    } else {
+        throw new IllegalArgumentException("Invalid visibility status: " + visibility + ". Accepted values are 'visible' or 'hidden'.");
     }
+}
 
 }
