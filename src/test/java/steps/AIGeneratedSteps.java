@@ -27,38 +27,44 @@ public class AIGeneratedSteps {
     }
 
     private Locator resolveLocator(String name) {
+        // Clean suffixes like " field", " section", " button"
+        String cleanName = name.replaceAll("(?i)( field| section| button| area| dropdown)$", "").trim();
+        
         // 1. Try getByLabel (case-insensitive)
-        Locator locator = page.getByLabel(Pattern.compile(Pattern.quote(name), Pattern.CASE_INSENSITIVE));
+        Locator locator = page.getByLabel(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
         if (locator.count() > 0) return locator.first();
         
         // 2. Try getByPlaceholder
-        locator = page.getByPlaceholder(Pattern.compile(Pattern.quote(name), Pattern.CASE_INSENSITIVE));
+        locator = page.getByPlaceholder(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
         if (locator.count() > 0) return locator.first();
         
         // 3. Try by ID (exact, camelCase, lowercase)
-        String base = name.replace(" ", "");
+        String base = cleanName.replace(" ", "");
         String camel = base.length() > 1 ? base.substring(0, 1).toLowerCase() + base.substring(1) : base.toLowerCase();
         locator = page.locator("#" + base + ", #" + camel + ", #" + base.toLowerCase());
         if (locator.count() > 0) return locator.first();
         
-        // 4. Try by Text
-        locator = page.getByText(Pattern.compile(Pattern.quote(name), Pattern.CASE_INSENSITIVE));
+        // 4. Hardcoded fallbacks for this specific app
+        String lower = cleanName.toLowerCase();
+        if (lower.contains("order number") || lower.contains("order no") || lower.contains("tracking") || (lower.contains("order id") && cleanName.toLowerCase().contains("field"))) return page.locator("#order_no, #orderIdInput, #orderSearchInput").first();
+        if (lower.contains("order id")) return page.locator("#resOrderId, #order_no").first();
+        if (lower.contains("status")) return page.locator("#resStatus").first();
+        if (lower.contains("track order") || lower.contains("search")) return page.locator("button:has-text('Track Order'), #searchBtn").first();
+        if (lower.contains("error")) return page.locator("#error-box, #error, #errorMessage, .result").first();
+        if (lower.contains("details")) return page.locator("#orderDetails");
+        if (lower.contains("results area")) return page.locator(".result").first();
+
+        // 5. Try by Text
+        locator = page.getByText(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
         if (locator.count() > 0) return locator.first();
         
-        // 5. Hardcoded fallbacks for this specific app
-        String lower = name.toLowerCase();
-        if (lower.contains("order id") || lower.contains("tracking")) return page.locator("#orderIdInput");
-        if (lower.contains("search")) return page.locator("#searchBtn");
-        if (lower.contains("error")) return page.locator("#error, #errorMessage").first();
-        if (lower.contains("details")) return page.locator("#orderDetails");
-        
-        return page.locator(name).first();
+        return page.locator(cleanName).first();
     }
 
     @Given("I am on the Order Search Page")
     public void navigateToApp() {
         System.out.println("Executing: Navigating to Order Search Page");
-        page.navigate("http://localhost:7070");
+        page.navigate("http://localhost:7070/order/tracking");
     }
 
     @When("I select {string} from the dropdown")
@@ -66,6 +72,7 @@ public class AIGeneratedSteps {
     public void selectDropdown(String optionLabel) {
         System.out.println("Executing: Selecting '" + optionLabel + "' from dropdown");
         page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel(optionLabel));
+        System.out.println("Finished: Selecting from dropdown");
     }
 
     @When("I enter {string} into the {string} field")
@@ -77,12 +84,16 @@ public class AIGeneratedSteps {
             System.out.println("Normalization: Stripped ORD prefix from value: " + finalValue);
         }
         resolveLocator(fieldLabel).fill(finalValue);
+        System.out.println("Finished: Entering into field");
     }
 
     @When("I click the {string} button")
+    @When("I click {string}")
+    @When("I click on {string}")
     public void clickButton(String buttonText) {
         System.out.println("Executing: Clicking '" + buttonText + "' button");
         resolveLocator(buttonText).click();
+        System.out.println("Finished: Clicking button");
     }
 
     @Then("the {string} section should be {string}")
@@ -97,9 +108,33 @@ public class AIGeneratedSteps {
     }
 
     @Then("the {string} should contain text {string}")
+    @Then("the {string} field should contain text {string}")
+    @Then("the {string} section should contain text {string}")
     @Then("the {string} should display {string}")
+    @Then("the {string} field should display {string}")
+    @Then("the {string} dropdown should display {string}")
     public void verifyTextContent(String element, String expectedText) {
         System.out.println("Executing: Verifying '" + element + "' contains text: " + expectedText);
+        
+        if (element.toLowerCase().contains("page title")) {
+            long start = System.currentTimeMillis();
+            boolean found = false;
+            String cleanExpected = expectedText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+            while (System.currentTimeMillis() - start < 10000) {
+                String actualTitle = page.title();
+                String cleanActual = actualTitle.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+                if (cleanActual.contains(cleanExpected)) {
+                    found = true;
+                    break;
+                }
+                try { Thread.sleep(500); } catch (InterruptedException e) {}
+            }
+            if (!found) {
+                assertThat(page).hasTitle(Pattern.compile(Pattern.quote(expectedText), Pattern.CASE_INSENSITIVE));
+            }
+            return;
+        }
+
         Locator locator = resolveLocator(element);
         
         String cleanExpected = expectedText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
@@ -108,6 +143,15 @@ public class AIGeneratedSteps {
         
         while (System.currentTimeMillis() - start < 10000) {
             String actualText = locator.innerText();
+            if (actualText == null || actualText.trim().isEmpty()) {
+                try {
+                    actualText = locator.inputValue();
+                } catch (Exception e) {
+                    // Not an input element, ignore
+                }
+            }
+            if (actualText == null) actualText = "";
+            
             String cleanActual = actualText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
             
             if (cleanActual.contains(cleanExpected)) {
@@ -126,8 +170,28 @@ public class AIGeneratedSteps {
         
         if (!found) {
             // Final assertion to provide a standard Playwright error and failure
-            assertThat(locator).containsText(expectedText);
+            try {
+                assertThat(locator).containsText(expectedText);
+            } catch (Exception e) {
+                String val = "";
+                try { val = locator.inputValue(); } catch (Exception ex) {}
+                assertEquals(expectedText, val, "Verification failed for element: " + element);
+            }
         }
+    }
+
+    @Then("the {string} section should be empty")
+    @Then("the {string} should be empty")
+    public void verifyEmpty(String element) {
+        System.out.println("Executing: Verifying '" + element + "' is empty");
+        Locator locator = resolveLocator(element);
+        assertThat(locator).isEmpty();
+    }
+
+    @Then("the search results area should be empty")
+    public void verifySearchResultsEmpty() {
+        System.out.println("Executing: Verifying search results area is empty");
+        assertThat(page.locator(".result")).isEmpty();
     }
 
     @Then("the {string} field should have placeholder {string}")
@@ -136,12 +200,12 @@ public class AIGeneratedSteps {
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
     }
 
-@Then("the {string} button should be enabled")
-public void theButtonShouldBeEnabled(String buttonName) {
-    System.out.println("Executing: The " + buttonName + " button should be enabled");
-    // Locating the button by its visible text
-    Locator buttonLocator = page.locator("button:has-text('" + buttonName + "')");
-    assertThat(buttonLocator).isEnabled();
-}
+    @Then("the {string} button should be enabled")
+    public void theButtonShouldBeEnabled(String buttonName) {
+        System.out.println("Executing: The " + buttonName + " button should be enabled");
+        // Locating the button by its visible text
+        Locator buttonLocator = page.locator("button:has-text('" + buttonName + "')");
+        assertThat(buttonLocator).isEnabled();
+    }
 
 }
