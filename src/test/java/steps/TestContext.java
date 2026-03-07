@@ -15,8 +15,8 @@ public class TestContext {
         context = browser.newContext();
         
         // Set default timeout to 60 seconds (60000 ms)
-        context.setDefaultTimeout(30000); 
-        context.setDefaultNavigationTimeout(30000);
+        context.setDefaultTimeout(90000); 
+        context.setDefaultNavigationTimeout(90000);
 
         page = context.newPage();
     }

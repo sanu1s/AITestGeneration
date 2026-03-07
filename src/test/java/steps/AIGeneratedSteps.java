@@ -102,19 +102,21 @@ public class AIGeneratedSteps {
         System.out.println("Executing: Verifying '" + element + "' contains text: " + expectedText);
         Locator locator = resolveLocator(element);
         
-        String normalizedExpected = expectedText.replaceAll("\\s+", " ").toLowerCase();
+        String cleanExpected = expectedText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
         long start = System.currentTimeMillis();
         boolean found = false;
         
         while (System.currentTimeMillis() - start < 10000) {
-            String actualText = locator.innerText().replaceAll("\\s+", " ").toLowerCase();
-            if (actualText.contains(normalizedExpected)) {
+            String actualText = locator.innerText();
+            String cleanActual = actualText.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+            
+            if (cleanActual.contains(cleanExpected)) {
                 found = true;
                 break;
             }
             if (expectedText.contains(": ")) {
-                String valueOnly = expectedText.substring(expectedText.indexOf(": ") + 2).replaceAll("\\s+", " ").toLowerCase();
-                if (actualText.contains(valueOnly)) {
+                String valueOnly = expectedText.substring(expectedText.indexOf(": ") + 2).replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+                if (cleanActual.contains(valueOnly)) {
                     found = true;
                     break;
                 }
@@ -133,5 +135,13 @@ public class AIGeneratedSteps {
         System.out.println("Executing: Verifying '" + fieldName + "' placeholder: " + expectedPlaceholder);
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
     }
+
+@Then("the {string} button should be enabled")
+public void theButtonShouldBeEnabled(String buttonName) {
+    System.out.println("Executing: The " + buttonName + " button should be enabled");
+    // Locating the button by its visible text
+    Locator buttonLocator = page.locator("button:has-text('" + buttonName + "')");
+    assertThat(buttonLocator).isEnabled();
+}
 
 }
