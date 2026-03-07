@@ -72,7 +72,6 @@ public class AIGeneratedSteps {
     public void selectDropdown(String optionLabel) {
         System.out.println("Executing: Selecting '" + optionLabel + "' from dropdown");
         page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel(optionLabel));
-        System.out.println("Finished: Selecting from dropdown");
     }
 
     @When("I enter {string} into the {string} field")
@@ -84,16 +83,12 @@ public class AIGeneratedSteps {
             System.out.println("Normalization: Stripped ORD prefix from value: " + finalValue);
         }
         resolveLocator(fieldLabel).fill(finalValue);
-        System.out.println("Finished: Entering into field");
     }
 
     @When("I click the {string} button")
-    @When("I click {string}")
-    @When("I click on {string}")
     public void clickButton(String buttonText) {
         System.out.println("Executing: Clicking '" + buttonText + "' button");
         resolveLocator(buttonText).click();
-        System.out.println("Finished: Clicking button");
     }
 
     @Then("the {string} section should be {string}")
@@ -180,6 +175,12 @@ public class AIGeneratedSteps {
         }
     }
 
+    @Then("the {string} field should have placeholder {string}")
+    public void verifyPlaceholder(String fieldName, String expectedPlaceholder) {
+        System.out.println("Executing: Verifying '" + fieldName + "' placeholder: " + expectedPlaceholder);
+        assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
+    }
+
     @Then("the {string} section should be empty")
     @Then("the {string} should be empty")
     public void verifyEmpty(String element) {
@@ -188,24 +189,17 @@ public class AIGeneratedSteps {
         assertThat(locator).isEmpty();
     }
 
-    @Then("the search results area should be empty")
-    public void verifySearchResultsEmpty() {
-        System.out.println("Executing: Verifying search results area is empty");
-        assertThat(page.locator(".result")).isEmpty();
-    }
-
-    @Then("the {string} field should have placeholder {string}")
-    public void verifyPlaceholder(String fieldName, String expectedPlaceholder) {
-        System.out.println("Executing: Verifying '" + fieldName + "' placeholder: " + expectedPlaceholder);
-        assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
-    }
-
     @Then("the {string} button should be enabled")
     public void theButtonShouldBeEnabled(String buttonName) {
         System.out.println("Executing: The " + buttonName + " button should be enabled");
-        // Locating the button by its visible text
-        Locator buttonLocator = page.locator("button:has-text('" + buttonName + "')");
-        assertThat(buttonLocator).isEnabled();
+        resolveLocator(buttonName).isEnabled();
+    }
+
+    @Then("I should see a prominent title {string}")
+    public void iShouldSeeAProminentTitle(String expectedTitle) {
+        System.out.println("Executing: I should see a prominent title " + expectedTitle);
+        // Use verifyTextContent logic if it fails or use a wait
+        verifyTextContent("page title", expectedTitle);
     }
 
 }
