@@ -27,8 +27,8 @@ public class AIGeneratedSteps {
     }
 
     private Locator resolveLocator(String name) {
-        // Clean suffixes like " field", " section", " button"
-        String cleanName = name.replaceAll("(?i)( field| section| button| area| dropdown)$", "").trim();
+        // Clean suffixes like " field", " section", " button", " area", " dropdown", " input"
+        String cleanName = name.replaceAll("(?i)( field| section| button| area| dropdown| input| clearly labeled)$", "").trim();
         
         // 1. Try getByLabel (case-insensitive)
         Locator locator = page.getByLabel(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
@@ -41,24 +41,29 @@ public class AIGeneratedSteps {
         // 3. Try by ID (exact, camelCase, lowercase)
         String base = cleanName.replace(" ", "");
         String camel = base.length() > 1 ? base.substring(0, 1).toLowerCase() + base.substring(1) : base.toLowerCase();
-        locator = page.locator("#" + base + ", #" + camel + ", #" + base.toLowerCase());
+        locator = page.locator("#" + base + ", #" + camel + ", #" + base.toLowerCase() + ", #" + cleanName.replace(" ", "_").toLowerCase());
         if (locator.count() > 0) return locator.first();
         
         // 4. Hardcoded fallbacks for this specific app
         String lower = cleanName.toLowerCase();
-        if (lower.contains("order number") || lower.contains("order no") || lower.contains("order id") && lower.contains("field")) return page.locator("#order_no, #orderIdInput").first();
+        if (lower.contains("order number") || lower.contains("order no") || lower.contains("order id")) return page.locator("#order_no, #orderIdInput, #resOrderId").first();
         if (lower.contains("tracking number") || lower.contains("tracking id") || lower.contains("tracking")) return page.locator("#order_no, #tracking_no").first();
         if (lower.contains("status")) return page.locator("#resStatus").first();
-        if (lower.contains("track order") || lower.contains("search")) return page.locator("button:has-text('Track Order'), #searchBtn").first();
-        if (lower.contains("error")) return page.locator("#error-box, #error, #errorMessage, .result").first();
-        if (lower.contains("details")) return page.locator("#orderDetails");
+        if (lower.contains("track") || lower.contains("search")) return page.locator("button:has-text('Track Order'), #searchBtn, button[type='submit'], #search_btn").first();
+        if (lower.contains("error")) return page.locator("#error-box, #error, #errorMessage, .error-message, .result").first();
+        if (lower.contains("details")) return page.locator("#orderDetails, .order-details");
+        if (lower.contains("shipping address")) return page.locator("#resShipAddr").first();
+        if (lower.contains("bill to address")) return page.locator("#resBillAddr").first();
+        if (lower.contains("delivery date")) return page.locator("#resDeliveryDate").first();
         if (lower.contains("results area") || lower.contains("search results")) return page.locator(".result, #searchResults").first();
+        if (lower.contains("search type") || lower.contains("search by")) return page.locator("#searchType, select").first();
 
         // 5. Try by Text
         locator = page.getByText(Pattern.compile(Pattern.quote(cleanName), Pattern.CASE_INSENSITIVE));
         if (locator.count() > 0) return locator.first();
         
-        return page.locator(cleanName).first();
+        // 6. Generic locator for IDs without # or other simple selectors
+        return page.locator(cleanName.startsWith("#") ? cleanName : "#" + cleanName).first();
     }
 
     @Given("I am on the Order Search Page")
@@ -70,8 +75,16 @@ public class AIGeneratedSteps {
     @When("I select {string} from the dropdown")
     @When("I select {string} from the search type dropdown")
     public void selectDropdown(String optionLabel) {
-        System.out.println("Executing: Selecting '" + optionLabel + "' from dropdown");
-        page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel(optionLabel));
+        selectDropdown(optionLabel, "searchType");
+    }
+
+    @When("I select {string} from {string} dropdown")
+    @When("I select {string} from the {string} dropdown")
+    public void selectDropdown(String optionValue, String dropdownLabel) {
+        System.out.println("Executing: Selecting '" + optionValue + "' from '" + dropdownLabel + "' dropdown");
+        Locator locator = resolveLocator(dropdownLabel);
+        locator.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel(optionValue));
+        locator.dispatchEvent("change");
     }
 
     @When("I enter {string} into the {string} field")
@@ -80,9 +93,13 @@ public class AIGeneratedSteps {
         
         // Proactive UI Management: Sync dropdown if field label implies search type
         if (fieldLabel.toLowerCase().contains("tracking")) {
-            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+            Locator sel = page.locator("#searchType, select").first();
+            sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+            sel.dispatchEvent("change");
         } else if (fieldLabel.toLowerCase().contains("order")) {
-            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+            Locator sel = page.locator("#searchType, select").first();
+            sel.selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+            sel.dispatchEvent("change");
         }
 
         String finalValue = value;
@@ -99,14 +116,21 @@ public class AIGeneratedSteps {
         resolveLocator(buttonText).click();
     }
 
-    @Then("the {string} section should be {string}")
-    public void verifySectionState(String sectionName, String state) {
-        System.out.println("Executing: Verifying '" + sectionName + "' section is " + state);
-        Locator locator = resolveLocator(sectionName);
-        if (state.equalsIgnoreCase("visible")) {
+    @Then("the {string} section should be {word}")
+    @Then("the {string} should be {word}")
+    @Then("the {string} dropdown should be {word}")
+    @Then("the {string} field should be {word}")
+    @Then("the {string} button should be {word}")
+    public void verifyElementState(String elementName, String state) {
+        System.out.println("Executing: Verifying '" + elementName + "' is " + state);
+        Locator locator = resolveLocator(elementName);
+        String cleanState = state.replace("\"", "").toLowerCase();
+        if (cleanState.equals("visible")) {
             assertThat(locator).isVisible();
-        } else {
+        } else if (cleanState.equals("hidden")) {
             assertThat(locator).isHidden();
+        } else {
+            throw new IllegalArgumentException("Unknown state: " + state);
         }
     }
 
@@ -187,12 +211,27 @@ public class AIGeneratedSteps {
         
         // Proactive UI Management: Sync dropdown if field label implies search type
         if (fieldName.toLowerCase().contains("tracking")) {
-            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
+            resolveLocator("searchType").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Tracking Number"));
         } else if (fieldName.toLowerCase().contains("order")) {
-            page.locator("select").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
+            resolveLocator("searchType").selectOption(new com.microsoft.playwright.options.SelectOption().setLabel("Order Number"));
         }
 
         assertThat(resolveLocator(fieldName)).hasAttribute("placeholder", expectedPlaceholder);
+    }
+
+    @Then("the {string} section should be empty")
+    @Then("the {string} should be empty")
+    public void verifyEmpty(String element) {
+        System.out.println("Executing: Verifying '" + element + "' is empty");
+        Locator locator = resolveLocator(element);
+        String text = locator.innerText();
+        assertTrue(text == null || text.trim().isEmpty(), "Expected " + element + " to be empty but found: " + text);
+    }
+
+    @Then("the page title should be {string}")
+    @Then("I should see a prominent title {string}")
+    public void verifyTitleImproved(String expectedTitle) {
+        verifyTextContent("page title", expectedTitle);
     }
 
     @Then("I should see an input field clearly labeled {string}")
@@ -205,29 +244,4 @@ public class AIGeneratedSteps {
     public void verifyButtonVisible(String buttonText) {
         assertThat(resolveLocator(buttonText)).isVisible();
     }
-
-@Then("the page title should be {string}")
-public void verifyPageTitle(String expectedTitle) {
-    System.out.println("Executing: Then the page title should be " + expectedTitle);
-    assertThat(page).hasTitle(expectedTitle);
-}
-
-@Then("the {string} section should be empty")
-public void verifySectionIsEmpty(String sectionId) {
-    System.out.println("Executing: Then the " + sectionId + " section should be empty");
-    assertThat(page.locator("section#" + sectionId)).hasText("");
-}
-
-@Then("the {string} should be {string}")
-public void verifyElementVisibility(String elementId, String visibility) {
-    System.out.println("Executing: Then the " + elementId + " should be " + visibility);
-    if (visibility.equalsIgnoreCase("visible")) {
-        assertThat(page.locator("#" + elementId)).isVisible();
-    } else if (visibility.equalsIgnoreCase("hidden")) {
-        assertThat(page.locator("#" + elementId)).isHidden();
-    } else {
-        throw new IllegalArgumentException("Invalid visibility status: " + visibility + ". Accepted values are 'visible' or 'hidden'.");
-    }
-}
-
 }
