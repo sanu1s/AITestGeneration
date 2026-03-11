@@ -46,7 +46,7 @@ public class AIGeneratedSteps {
         
         // 4. Hardcoded fallbacks for this specific app
         String lower = cleanName.toLowerCase();
-        if (lower.contains("format hint")) return page.locator("#format-hint").first();
+        if (lower.contains("format hint") || lower.contains("helpful hint") || lower.contains("ui note")) return page.locator("#format-hint").first();
         if (lower.contains("order number") || lower.contains("order no") || lower.contains("order id")) return page.locator("#order_no, #orderIdInput, #resOrderId").first();
         if (lower.contains("tracking number") || lower.contains("tracking id") || lower.contains("tracking")) return page.locator("#order_no, #tracking_no").first();
         if (lower.contains("status")) return page.locator("#resStatus").first();
@@ -67,10 +67,16 @@ public class AIGeneratedSteps {
         return page.locator(cleanName.startsWith("#") ? cleanName : "#" + cleanName).first();
     }
 
-    @Given("I am on the Order Search Page")
-    public void navigateToApp() {
-        System.out.println("Executing: Navigating to Order Search Page");
+    @Given("I am on the {string}")
+    public void navigateToApp(String pageName) {
+        System.out.println("Executing: Navigating to " + pageName);
         page.navigate("http://localhost:7070/order/tracking");
+    }
+
+    @Given("I am on the Order Search Page")
+    @Given("I am on the UPS Tracking Page")
+    public void navigateToAppGeneric() {
+        navigateToApp("Order Search Page");
     }
 
     @When("I select {string} from the dropdown")
